@@ -15,3 +15,9 @@ class PrinterCreate(BaseModel):
     ip: str
     model: str = None
     connection_mode: str = "web"  # Default
+
+class PrinterStatus(BaseModel):
+    toner_levels: dict  # e.g., {"black": 80}
+    errors: list[str]  # e.g., ["Paper Jam"]
+    model: str
+    ip: str
