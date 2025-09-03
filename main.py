@@ -3,10 +3,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from routers.printers import router as printers_router
 from sqlalchemy.orm import Session
 from database import engine, get_db
-import models
+import model
 from auth import create_access_token, get_current_user, fake_users_db  # Import auth
 
-models.Base.metadata.create_all(bind=engine)
+model.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 

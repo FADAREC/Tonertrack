@@ -5,6 +5,7 @@ from database import get_db
 from auth import get_current_user
 from utils import scan_network, is_printer_via_snmp, get_printer_status
 from crud import create_printer, get_printer_by_ip, update_printer_status, get_printer, delete_printer
+from .. import model
 import logging
 
 logger = logging.getLogger(__name__)
@@ -38,7 +39,7 @@ def scan(subnet: ScanRequest, db: Session = Depends(get_db), current_user: dict 
     
 @router.get("/{printer_id}/status", response_model=PrinterStatus)
 async def get_status(printer_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    printer = db.query(models.Printer).filter(models.Printer.id == printer_id).first()
+    printer = db.query(model.Printer).filter(model.Printer.id == printer_id).first()
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     

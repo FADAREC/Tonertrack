@@ -1,4 +1,12 @@
-from pysnmp.hlapi import *
+from pysnmp.hlapi import (
+    getCmd,
+    SnmpEngine,
+    CommunityData,
+    UdpTransportTarget,
+    ContextData,
+    ObjectType,
+    ObjectIdentity,
+)
 import nmap
 import logging
 import requests

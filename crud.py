@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
-import models
+import model
 from schemas import PrinterCreate
 
 def create_printer(db: Session, printer: PrinterCreate):
-    db_printer = models.Printer(
+    db_printer = model.Printer(
         ip=printer.ip,
         model=printer.model,
         connection_mode=printer.connection_mode,
@@ -16,12 +16,12 @@ def create_printer(db: Session, printer: PrinterCreate):
     return db_printer
 
 def get_printers(db: Session):
-    return db.query(models.Printer).all()
+    return db.query(model.Printer).all()
 
 def get_printer_by_ip(db: Session, ip: str):
-    return db.query(models.Printer).filter(models.Printer.ip == ip).first()
+    return db.query(model.Printer).filter(model.Printer.ip == ip).first()
 
-def update_printer_status(db: Session, printer: models.Printer, toner_levels: dict, errors: list):
+def update_printer_status(db: Session, printer: model.Printer, toner_levels: dict, errors: list):
     printer.toner_levels = toner_levels
     printer.errors = errors
     db.commit()
@@ -29,8 +29,8 @@ def update_printer_status(db: Session, printer: models.Printer, toner_levels: di
     return printer
 
 def get_printer(db: Session, printer_id: int):
-    return db.query(models.Printer).filter(models.Printer.id == printer_id).first()
+    return db.query(model.Printer).filter(model.Printer.id == printer_id).first()
 
-def delete_printer(db: Session, printer: models.Printer):
+def delete_printer(db: Session, printer: model.Printer):
     db.delete(printer)
     db.commit()
