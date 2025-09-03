@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from routers.printers import router as printers_router
 from sqlalchemy.orm import Session
 from database import engine, get_db
 import models
@@ -8,6 +9,8 @@ from auth import create_access_token, get_current_user, fake_users_db  # Import 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.include_router(printers_router)
 
 @app.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends()):
