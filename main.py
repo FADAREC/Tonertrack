@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, get_db
 import models
@@ -14,6 +15,14 @@ from auth import verify_password  # For real password check
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Include both for safety
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],  # Explicitly allow OPTIONS
+    allow_headers=["*"],  # Allow all headers (Authorization, Content-Type, etc.)
+)
 
 app.include_router(printers_router)
 
