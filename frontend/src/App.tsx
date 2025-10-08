@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'; // Fixed: Added Link for nav
-import Auth from './components/auth';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Auth from './components/Auth';
 import Dashboard from './components/Dashboard';
-import PrinterList from './components/PrinterList'; // New: List page
-import AddPrinter from './components/AddPrinter'; // New: Add page
+import PrinterList from './components/PrinterList';
+import AddPrinter from './components/AddPrinter';
+import Settings from './components/Settings';
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';
 
@@ -23,8 +24,9 @@ function App() {
               <main className="flex-1 overflow-y-auto p-6">
                 <Routes>
                   <Route path="/" element={<Dashboard darkMode={darkMode} />} />
-                  <Route path="/printers" element={<PrinterList darkMode={darkMode} />} />  // New: List page
-                  <Route path="/add-printer" element={<AddPrinter darkMode={darkMode} />} />  // New: Add page
+                  <Route path="/printers" element={<PrinterList darkMode={darkMode} />} />
+                  <Route path="/add-printer" element={<AddPrinter darkMode={darkMode} />} />
+                  <Route path="/settings" element={<Settings darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />  // Fixed: Pass toggleDarkMode prop
                 </Routes>
               </main>
             </div>
