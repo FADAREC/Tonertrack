@@ -18,9 +18,9 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # Include both for safety
+    allow_origins=["https://tonertrack.onrender.com", "http://localhost:3000"], 
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE", "OPTIONS"],  # Explicitly allow OPTIONS
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Explicitly allow OPTIONS
     allow_headers=["*"],  # Allow all headers (Authorization, Content-Type, etc.)
 )
 
