@@ -10,9 +10,9 @@ root.render(
   </React.StrictMode>
 );
 
-// Service worker registration
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(err => console.error('Service Worker Error:', err));
-  });
-}
+// // Service worker registration
+// if ('serviceWorker' in navigator) {
+//   window.addEventListener('load', () => {
+//     navigator.serviceWorker.register('/sw.js').catch(err => console.error('Service Worker Error:', err));
+//   });
+// }

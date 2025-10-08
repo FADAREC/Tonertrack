@@ -96,6 +96,7 @@ const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
             placeholder="Password"
             required
             minLength={6}
+            autoComplete="current-password"
             className="w-full pl-10 p-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 text-white placeholder-white/50 transition-all duration-300"
           />
         </motion.div>
