@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'; // Fixed: Added Link for nav
 import Auth from './components/auth';
 import Dashboard from './components/Dashboard';
+import PrinterList from './components/PrinterList'; // New: List page
+import AddPrinter from './components/AddPrinter'; // New: Add page
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';
 
 function App() {
-  const [darkMode, setDarkMode] = useState(true); // Default dark for drippy vibe
+  const [darkMode, setDarkMode] = useState(true);
 
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
@@ -21,13 +23,14 @@ function App() {
               <main className="flex-1 overflow-y-auto p-6">
                 <Routes>
                   <Route path="/" element={<Dashboard darkMode={darkMode} />} />
+                  <Route path="/printers" element={<PrinterList darkMode={darkMode} />} />  // New: List page
+                  <Route path="/add-printer" element={<AddPrinter darkMode={darkMode} />} />  // New: Add page
                 </Routes>
               </main>
             </div>
           </div>
         ) : (
           <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-            {/* Animated glassy background */}
             <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-indigo-900/20 animate-pulse" />
             <div className="w-full max-w-md p-8 relative z-10">
               <Auth darkMode={darkMode} />

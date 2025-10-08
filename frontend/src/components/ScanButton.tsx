@@ -44,7 +44,7 @@ const ScanButton: React.FC = () => {
         whileTap={{ scale: 0.98 }}
         onClick={handleScan}
         disabled={loading}
-        className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white p-3 rounded-xl hover:from-indigo-600 hover:to-blue-600 disabled:opacity-50 transition-all duration-300 shadow-md"
+        className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 dark:text-white p-3 rounded-xl hover:from-indigo-600 hover:to-blue-600 disabled:opacity-50 transition-all duration-300 shadow-md"
       >
         {loading ? 'Scanning...' : 'Start Scan'}
       </motion.button>

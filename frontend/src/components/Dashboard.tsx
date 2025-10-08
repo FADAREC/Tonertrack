@@ -78,10 +78,10 @@ const Dashboard: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
         animate={{ y: 0, opacity: 1 }}
         className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10"
       >
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent dark:text-transparent">
           Dashboard Overview
         </h1>
-        <p className="text-white/70 mt-2">Monitor your printers in real-time</p>
+        <p className="dark:text-white/70 mt-2">Monitor your printers in real-time</p>
       </motion.div>
 
       {/* Stat Cards */}
@@ -98,7 +98,7 @@ const Dashboard: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10"
         >
-          <h3 className="text-lg font-semibold text-white mb-4">Toner Usage Trend</h3>
+          <h3 className="text-lg font-semibold dark:text-white mb-4">Toner Usage Trend</h3>
           <ResponsiveContainer width="100%" height={300}>
             <LineChart data={lineData}>
               <XAxis dataKey="name" stroke="#9CA3AF" />
@@ -114,7 +114,7 @@ const Dashboard: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10"
         >
-          <h3 className="text-lg font-semibold text-white mb-4">Color Distribution</h3>
+          <h3 className="text-lg font-semibold dark:text-white mb-4">Color Distribution</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={barData}>
               <XAxis dataKey="name" stroke="#9CA3AF" />
@@ -137,10 +137,10 @@ const Dashboard: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
         className="space-y-4"
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-white">Printers</h2>
+          <h2 className="text-2xl font-bold dark:text-white">Printers</h2>
           <div className="flex space-x-2">
-            <button className="px-4 py-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-colors">Grid</button>
-            <button className="px-4 py-2 bg-white/10 rounded-xl text-white hover:bg-white/20 transition-colors">List</button>
+            <button className="px-4 py-2 bg-white/10 rounded-xl dark:text-white hover:bg-white/20 transition-colors">Grid</button>
+            <button className="px-4 py-2 bg-white/10 rounded-xl dark:text-white hover:bg-white/20 transition-colors">List</button>
           </div>
         </div>
         <AnimatePresence>
@@ -168,10 +168,10 @@ const StatCard: React.FC<StatCardProps> = ({ icon: Icon, title, value, color }) 
     whileHover={{ y: -5, scale: 1.02 }}
     className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 cursor-pointer"
   >
-    <div className={`p-3 rounded-xl ${color} text-white mb-4`}>
+    <div className={`p-3 rounded-xl ${color} dark:text-white mb-4`}>
       <Icon className="h-6 w-6" />
     </div>
-    <h3 className="text-sm text-white/70 font-medium">{title}</h3>
+    <h3 className="text-sm dark:text-white/70 font-medium">{title}</h3>
     <p className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
       {value}
     </p>
@@ -192,18 +192,18 @@ const PrinterCard: React.FC<PrinterCardProps> = ({ printer, index }) => (
     className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10 hover:border-white/20 transition-all duration-300 group"
   >
     <div className="flex items-center justify-between mb-4">
-      <h3 className="text-lg font-semibold text-white">{printer.model || 'Unknown'}</h3>
+      <h3 className="text-lg font-semibold dark:text-white">{printer.model || 'Unknown'}</h3>
       <div className={`px-2 py-1 rounded-full text-xs font-medium ${printer.connection_mode === 'web' ? 'bg-blue-500/20 text-blue-300' : 'bg-purple-500/20 text-purple-300'}`}>
         {printer.connection_mode.toUpperCase()}
       </div>
     </div>
-    <p className="text-white/70 text-sm mb-4">{printer.ip}</p>
+    <p className="dark:text-white/70 text-sm mb-4">{printer.ip}</p>
     
     <div className="space-y-3 mb-4">
       {Object.entries(printer.toner_levels).map(([color, level]) => (
         <div key={color} className="flex items-center space-x-2">
           <div className={`h-2 w-2 rounded-full bg-${color}-400`}></div>
-          <span className="text-white/70 text-sm capitalize">{color}</span>
+          <span className="dark:text-white/70 text-sm capitalize">{color}</span>
           <div className="flex-1 bg-white/10 rounded-full h-1.5 overflow-hidden">
             <motion.div 
               className="h-1.5 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
@@ -212,7 +212,7 @@ const PrinterCard: React.FC<PrinterCardProps> = ({ printer, index }) => (
               transition={{ duration: 0.8 }}
             />
           </div>
-          <span className="text-white font-medium">{level}%</span>
+          <span className="dark:text-white font-medium">{level}%</span>
         </div>
       ))}
     </div>
@@ -225,7 +225,7 @@ const PrinterCard: React.FC<PrinterCardProps> = ({ printer, index }) => (
         </div>
         <ul className="space-y-1">
           {printer.errors.map((err, i) => (
-            <li key={i} className="text-white/70 text-sm flex items-center">
+            <li key={i} className="dark:text-white/70 text-sm flex items-center">
               <AlertTriangle className="h-3 w-3 mr-2" />
               {err}
             </li>

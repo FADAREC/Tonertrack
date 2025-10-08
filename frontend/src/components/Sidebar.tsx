@@ -6,6 +6,7 @@ const Sidebar: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Printer, label: 'Printers', path: '/printers' },
+    {icon: Printer, label: 'Add a new Printer', path: '/add-printer'},
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -31,7 +32,7 @@ const Sidebar: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
               key={item.label}
               href={item.path}
               whileHover={{ x: 5 }}
-              className="flex items-center p-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
+              className="flex items-center p-3 rounded-xl dark:text-white/70 hover:dark:text-white hover:bg-white/10 transition-all duration-300"
             >
               <item.icon className="h-5 w-5 mr-3" />
               {item.label}

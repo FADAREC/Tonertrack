@@ -69,7 +69,7 @@ const AddPrinterForm: React.FC = () => {
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         disabled={loading}
-        className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 text-white p-3 rounded-xl hover:from-indigo-600 hover:to-blue-600 disabled:opacity-50 transition-all duration-300 shadow-md flex items-center justify-center"
+        className="w-full bg-gradient-to-r from-indigo-500 to-blue-500 dark:text-white p-3 rounded-xl hover:from-indigo-600 hover:to-blue-600 disabled:opacity-50 transition-all duration-300 shadow-md flex items-center justify-center"
       >
         <Plus className="h-5 w-5 mr-2" />
         {loading ? 'Adding...' : 'Add Printer'}
