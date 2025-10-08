@@ -1,12 +1,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Printer, Settings, LogOut } from 'lucide-react'; // Fixed: Removed unused ChevronLeft
+import { LayoutDashboard, Printer, Settings, LogOut } from 'lucide-react';
+import { Link } from 'react-router-dom';  // Fixed: Added Link for routing
 
 const Sidebar: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Printer, label: 'Printers', path: '/printers' },
-    {icon: Printer, label: 'Add a new Printer', path: '/add-printer'},
     { icon: Settings, label: 'Settings', path: '/settings' },
   ];
 
@@ -19,7 +19,6 @@ const Sidebar: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
     <motion.aside
       initial={{ x: -300 }}
       animate={{ x: 0 }}
-      transition={{ duration: 0.3 }}
       className="w-64 bg-white/5 backdrop-blur-lg shadow-2xl rounded-r-3xl p-6 flex flex-col justify-between border-r border-white/10"
     >
       <div>
@@ -28,15 +27,20 @@ const Sidebar: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
         </h1>
         <nav className="space-y-2">
           {menuItems.map((item, index) => (
-            <motion.a
+            <motion.div
               key={item.label}
-              href={item.path}
-              whileHover={{ x: 5 }}
-              className="flex items-center p-3 rounded-xl dark:text-white/70 hover:dark:text-white hover:bg-white/10 transition-all duration-300"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
             >
-              <item.icon className="h-5 w-5 mr-3" />
-              {item.label}
-            </motion.a>
+              <Link
+                to={item.path}
+                className="flex items-center p-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
+              >
+                <item.icon className="h-5 w-5 mr-3" />
+                {item.label}
+              </Link>
+            </motion.div>
           ))}
         </nav>
       </div>
