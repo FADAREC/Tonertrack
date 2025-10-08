@@ -3,7 +3,10 @@
 @tailwind utilities;
 
 @layer base {
-  body.dark {
+  .dark {
     @apply text-white;
+  }
+  body {
+    @apply antialiased;  // Smooth fonts
   }
 }
