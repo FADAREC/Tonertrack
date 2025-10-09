@@ -1,9 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Printer, Settings, LogOut } from 'lucide-react';
-import { Link } from 'react-router-dom';  // Fixed: Added Link for routing
+import { LayoutDashboard, Printer, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
-const Sidebar: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
+const Sidebar: React.FC<{ darkMode: boolean; isOpen: boolean; toggleSidebar: () => void }> = ({ darkMode, isOpen, toggleSidebar }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Printer, label: 'Printers', path: '/printers' },
@@ -18,13 +18,19 @@ const Sidebar: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
   return (
     <motion.aside
       initial={{ x: -300 }}
-      animate={{ x: 0 }}
-      className="w-64 bg-white/5 backdrop-blur-lg shadow-2xl rounded-r-3xl p-6 flex flex-col justify-between border-r border-white/10"
+      animate={{ x: isOpen ? 0 : -300 }} // Animate open/close
+      transition={{ duration: 0.3 }}
+      className="w-64 bg-white/5 backdrop-blur-lg shadow-2xl rounded-r-3xl p-6 flex flex-col justify-between border-r border-white/10 fixed h-screen z-50" // Fixed position for overlay
     >
       <div>
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-8">
-          PrintHub
-        </h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+            PrintHub
+          </h1>
+          <button onClick={toggleSidebar} className="text-white/70 hover:text-white">
+            {isOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+          </button>
+        </div>
         <nav className="space-y-2">
           {menuItems.map((item, index) => (
             <motion.div
