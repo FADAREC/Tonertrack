@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Printer, AlertTriangle, Droplet, Link } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Printer, AlertTriangle } from 'lucide-react';
+import { Link } from 'react-router-dom'; // Fixed: Add Link for button
 import { printersAPI } from '../services/api';
 
 interface Printer {
@@ -47,9 +48,9 @@ const PrinterList: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
     >
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">All Printers</h2>
-        <Link to="/add-printer" className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-4 py-2 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all">
+        <Link to="/add-printer" className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all shadow-md">
           Add New Printer
-        </Link>
+        </Link> {/* New: Add button */}
       </div>
 
       {printers.length === 0 ? (
