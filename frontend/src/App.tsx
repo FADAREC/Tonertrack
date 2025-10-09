@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Auth from './components/Auth';
+import Auth from './components/auth';
 import Dashboard from './components/Dashboard';
 import PrinterList from './components/PrinterList';
 import AddPrinter from './components/AddPrinter';
