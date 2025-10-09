@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Lock, Globe, Twitter, ArrowRight } from 'lucide-react'; // Fixed: Replaced Google with Globe
+import { User, Lock, ArrowRight } from 'lucide-react';
 import { authAPI } from '../services/api';
 
 const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
@@ -18,29 +18,22 @@ const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
         localStorage.setItem('token', res.data.access_token);
         window.location.reload();
       } else {
-        alert('Registered! Please login.');
+        setIsRegister(false); // Switch to login after register
+        alert('Registered! Now login.');
       }
     } catch (err: any) {
+      let errorMsg = 'Unknown error';
       if (err.response) {
-        setError(err.response.data?.detail || `HTTP Error: ${err.response.status}`);
+        const detail = err.response.data?.detail;
+        errorMsg = Array.isArray(detail) ? detail.map(d => d.msg).join(', ') : detail || `Error: ${err.response.status}`;
       } else if (err.request) {
-        setError('No response from server. Is the backend running?');
+        errorMsg = 'No server response. Check backend.';
       } else {
-        setError(`Error: ${err.message}`);
+        errorMsg = err.message;
       }
-      console.error('Auth error:', err);
+      setError(errorMsg);
     }
   };
-
-  const SocialButton = ({ provider, Icon }: { provider: string; Icon: React.FC<{ className?: string }> }) => (
-    <motion.button
-      whileHover={{ scale: 1.02 }}
-      className="w-full flex items-center justify-center space-x-2 p-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl hover:border-white/30 transition-all duration-300 dark:text-white"
-    >
-      <Icon className="h-5 w-5" />
-      <span>Continue with {provider}</span>
-    </motion.button>
-  );
 
   return (
     <motion.form
@@ -56,9 +49,9 @@ const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
         className="text-center"
       >
         <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-          Welcome Back
+          {isRegister ? 'Sign Up' : 'Welcome Back'}
         </h2>
-        <p className="dark:text-white/70 text-sm">
+        <p className="text-white/70 text-sm">
           {isRegister ? 'Create your account' : 'Sign in to your account'}
         </p>
       </motion.div>
@@ -70,15 +63,15 @@ const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
           transition={{ delay: 0.1 }}
           className="relative"
         >
-          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 dark:text-white/50 h-5 w-5" />
+          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
-            placeholder="Email or Username"
+            placeholder="Username"
             required
             minLength={3}
-            className="w-full pl-10 p-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 dark:text-white placeholder-white/50 transition-all duration-300"
+            className="w-full pl-10 p-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 text-white placeholder-white/50 transition-all duration-300"
           />
         </motion.div>
 
@@ -88,7 +81,7 @@ const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
           transition={{ delay: 0.2 }}
           className="relative"
         >
-          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 dark:text-white/50 h-5 w-5" />
+          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
           <input
             type="password"
             value={password}
@@ -97,7 +90,7 @@ const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
             required
             minLength={6}
             autoComplete="current-password"
-            className="w-full pl-10 p-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 dark:text-white placeholder-white/50 transition-all duration-300"
+            className="w-full pl-10 p-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 text-white placeholder-white/50 transition-all duration-300"
           />
         </motion.div>
       </div>
@@ -106,22 +99,17 @@ const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
         type="submit"
         whileHover={{ scale: 1.02, boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3)' }}
         whileTap={{ scale: 0.98 }}
-        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 dark:text-white p-3 rounded-xl shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium"
+        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium"
       >
         <ArrowRight className="inline h-5 w-5 mr-2" />
         {isRegister ? 'Sign Up' : 'Sign In'}
       </motion.button>
 
-      <div className="space-y-3">
-        <SocialButton provider="Google" Icon={Globe} /> {/* Fixed: Used Globe for Google */}
-        <SocialButton provider="X" Icon={Twitter} />
-      </div>
-
       <motion.button
         type="button"
         onClick={() => setIsRegister(!isRegister)}
         whileHover={{ scale: 1.02 }}
-        className="w-full dark:text-white/70 hover:dark:text-white text-sm font-medium transition-colors duration-200"
+        className="w-full text-white/70 hover:text-white text-sm font-medium transition-colors duration-200"
       >
         {isRegister ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
       </motion.button>
