@@ -7,7 +7,7 @@ import AddPrinter from './components/AddPrinter';
 import Settings from './components/Settings';
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';
-import PrinterDetails from './components/PrinterDetails'; // New: Details page
+// import PrinterDetails from './components/PrinterDetails'; // New: Details page
 
 function App() {
   const [darkMode, setDarkMode] = useState(true);
