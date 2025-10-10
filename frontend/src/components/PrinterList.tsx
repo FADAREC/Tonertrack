@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Printer, AlertTriangle } from 'lucide-react';
-import { Link } from 'react-router-dom'; // Fixed: Add Link for button
+import { Link } from 'react-router-dom';
 import { printersAPI } from '../services/api';
 
 interface Printer {
@@ -16,6 +16,7 @@ interface Printer {
 const PrinterList: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
   const [printers, setPrinters] = useState<Printer[]>([]);
   const [loading, setLoading] = useState(true);
+  const role = localStorage.getItem('role') || 'staff'; // New: Get role
 
   useEffect(() => {
     fetchPrinters();
@@ -48,9 +49,11 @@ const PrinterList: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
     >
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">All Printers</h2>
-        <Link to="/add-printer" className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all shadow-md">
-          Add New Printer
-        </Link> {/* New: Add button */}
+        {role === 'admin' && ( // New: Admin-only add button
+          <Link to="/add-printer" className="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all shadow-md">
+            Add New Printer
+          </Link>
+        )}
       </div>
 
       {printers.length === 0 ? (

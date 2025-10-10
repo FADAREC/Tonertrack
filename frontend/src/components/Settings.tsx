@@ -5,6 +5,7 @@ import { Settings as SettingsIcon, LogOut } from 'lucide-react';
 const Settings: React.FC<{ darkMode: boolean; toggleDarkMode: () => void }> = ({ darkMode, toggleDarkMode }) => {
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
     window.location.reload();
   };
 
@@ -34,7 +35,6 @@ const Settings: React.FC<{ darkMode: boolean; toggleDarkMode: () => void }> = ({
           <LogOut className="h-5 w-5" />
           <span>Logout</span>
         </motion.button>
-        {/* Add more settings */}
       </div>
     </motion.div>
   );

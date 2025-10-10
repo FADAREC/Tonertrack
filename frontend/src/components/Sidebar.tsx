@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { LayoutDashboard, Printer, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const Sidebar: React.FC<{ darkMode: boolean; isOpen: boolean; toggleSidebar: () => void }> = ({ darkMode, isOpen, toggleSidebar }) => {
+const Sidebar: React.FC<{ darkMode: boolean; isOpen: boolean; toggleSidebar: () => void; role: string }> = ({ darkMode, isOpen, toggleSidebar, role }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Printer, label: 'Printers', path: '/printers' },
@@ -12,15 +12,15 @@ const Sidebar: React.FC<{ darkMode: boolean; isOpen: boolean; toggleSidebar: () 
 
   const handleLogout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('role');
     window.location.reload();
   };
 
   return (
     <motion.aside
-      initial={{ x: -300 }}
-      animate={{ x: isOpen ? 0 : -300 }} // Animate open/close
+      animate={{ x: isOpen ? 0 : -300 }}
       transition={{ duration: 0.3 }}
-      className="w-64 bg-white/5 backdrop-blur-lg shadow-2xl rounded-r-3xl p-6 flex flex-col justify-between border-r border-white/10 fixed h-screen z-50" // Fixed position for overlay
+      className="w-64 bg-white/5 backdrop-blur-lg shadow-2xl rounded-r-3xl p-6 flex flex-col justify-between border-r border-white/10 fixed h-screen z-50"
     >
       <div>
         <div className="flex justify-between items-center mb-8">
@@ -48,6 +48,15 @@ const Sidebar: React.FC<{ darkMode: boolean; isOpen: boolean; toggleSidebar: () 
               </Link>
             </motion.div>
           ))}
+          {role === 'admin' && ( // Show add for admin only
+            <Link
+              to="/add-printer"
+              className="flex items-center p-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
+            >
+              <Plus className="h-5 w-5 mr-3" />
+              Add Printer
+            </Link>
+          )}
         </nav>
       </div>
       <motion.button
