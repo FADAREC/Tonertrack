@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Printer, Settings, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { LayoutDashboard, Printer, Settings, LogOut, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const Sidebar: React.FC<{ darkMode: boolean; isOpen: boolean; toggleSidebar: () => void; role: string }> = ({ darkMode, isOpen, toggleSidebar, role }) => {
