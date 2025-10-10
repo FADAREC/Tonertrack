@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Settings as SettingsIcon, LogOut, UserPlus, UserX } from 'lucide-react';
-import { api } from '../services/api';  // Default api for users
+import api from '../services/api';  // Default api for users
 
 const Settings: React.FC<{ darkMode: boolean; toggleDarkMode: () => void }> = ({ darkMode, toggleDarkMode }) => {
   const role = localStorage.getItem('role') || 'staff';
