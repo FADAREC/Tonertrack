@@ -37,7 +37,8 @@ const Settings: React.FC<{ darkMode: boolean; toggleDarkMode: () => void }> = ({
   };
 
   const deleteUser = async (id: number) => {
-    if (confirm('Delete user?')) {
+    const userConfirmed = window.confirm('Are you sure you want to delete this user?');
+    if (userConfirmed) {
       try {
         await api.delete(`/users/${id}`);
         fetchUsers();
