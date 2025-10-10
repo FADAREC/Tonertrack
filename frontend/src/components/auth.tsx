@@ -12,13 +12,18 @@ const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    if (username.length < 3 || password.length < 6) {
+      setError('Username at least 3 chars, password at least 6');
+      return;
+    }
     try {
       const res = isRegister ? await authAPI.register(username, password) : await authAPI.login(username, password);
       if (!isRegister) {
         localStorage.setItem('token', res.data.access_token);
+        localStorage.setItem('role', res.data.role);
         window.location.reload();
       } else {
-        setIsRegister(false); // Switch to login after register
+        setIsRegister(false);
         alert('Registered! Now login.');
       }
     } catch (err: any) {

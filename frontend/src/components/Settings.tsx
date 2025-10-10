@@ -1,8 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Settings as SettingsIcon, LogOut } from 'lucide-react';
+import { Settings as SettingsIcon, LogOut, UserPlus, UserX } from 'lucide-react';
+import { api } from '../services/api';  // Default api for users
 
 const Settings: React.FC<{ darkMode: boolean; toggleDarkMode: () => void }> = ({ darkMode, toggleDarkMode }) => {
+  const role = localStorage.getItem('role') || 'staff';
+  const [users, setUsers] = useState([]);
+  const [newUser, setNewUser] = useState({ username: '', password: '', role: 'staff' });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (role === 'admin') fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const res = await api.get('/users');
+      setUsers(res.data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const addUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await api.post('/users', newUser);
+      fetchUsers();
+      setNewUser({ username: '', password: '', role: 'staff' });
+    } catch (err) {
+      alert('Add failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteUser = async (id: number) => {
+    if (confirm('Delete user?')) {
+      try {
+        await api.delete(`/users/${id}`);
+        fetchUsers();
+      } catch (err) {
+        alert('Delete failed');
+      }
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
@@ -27,6 +71,50 @@ const Settings: React.FC<{ darkMode: boolean; toggleDarkMode: () => void }> = ({
             </div>
           </label>
         </div>
+        {role === 'admin' && (
+          <>
+            <h3 className="text-xl font-semibold text-white mt-6">Manage Users</h3>
+            <form onSubmit={addUser} className="space-y-4 mb-6">
+              <input
+                type="text"
+                value={newUser.username}
+                onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                placeholder="Username"
+                required
+                className="w-full p-3 bg-white/5 border border-white/20 rounded-xl text-white"
+              />
+              <input
+                type="password"
+                value={newUser.password}
+                onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                placeholder="Password"
+                required
+                className="w-full p-3 bg-white/5 border border-white/20 rounded-xl text-white"
+              />
+              <select
+                value={newUser.role}
+                onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                className="w-full p-3 bg-white/5 border border-white/20 rounded-xl text-white"
+              >
+                <option value="staff">Staff</option>
+                <option value="admin">Admin</option>
+              </select>
+              <button type="submit" disabled={loading} className="w-full bg-blue-500 text-white p-3 rounded-xl">
+                {loading ? 'Adding...' : 'Add User'}
+              </button>
+            </form>
+            <div className="space-y-2">
+              {users.map((user: {id: number, username: string, role: string}) => (
+                <div key={user.id} className="flex justify-between p-3 bg-white/10 rounded-xl">
+                  <span>{user.username} ({user.role})</span>
+                  <button onClick={() => deleteUser(user.id)} className="text-red-300 hover:text-red-500">
+                    <UserX className="h-5 w-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
         <motion.button
           onClick={handleLogout}
           whileHover={{ scale: 1.02 }}

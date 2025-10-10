@@ -7,10 +7,12 @@ class Printer(Base):
     id = Column(Integer, primary_key=True, index=True)
     ip = Column(String, unique=True, index=True)
     model = Column(String)
-    toner_levels = Column(JSON)  # e.g., {"black": 80, "cyan": 50}
-    errors = Column(JSON)  # e.g., ["Paper Jam"]
-    connection_mode = Column(String)  # "web" or "snmp"
+    toner_levels = Column(JSON)
+    errors = Column(JSON)
+    connection_mode = Column(String)
     snmp_community = Column(String, default="public")
+    department = Column(String, default=None)
+    location = Column(String, default=None)
 
 class User(Base):
     __tablename__ = "users"
@@ -18,3 +20,4 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    role = Column(String, default="staff")

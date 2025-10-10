@@ -22,19 +22,7 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
     }
   };
 
-  if (success) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="text-center py-12 bg-white/5 rounded-2xl"
-      >
-        <Plus className="mx-auto h-16 w-16 text-green-400 mb-4 animate-bounce" />
-        <h3 className="text-xl font-semibold text-white mb-2">Printer Added!</h3>
-        <p className="text-white/70">Redirecting to your printers...</p>
-      </motion.div>
-    );
-  }
+  if (success) return <p>Printer Added!</p>;
 
   return (
     <motion.form 

@@ -1,17 +1,17 @@
 from sqlalchemy.orm import Session
 import models
-from schemas import PrinterCreate, UserCreate
-# For real hashing, uncomment
-from auth import get_password_hash
+from schemas import PrinterCreate, UserCreate, UserResponse
 
 def create_printer(db: Session, printer: PrinterCreate):
     db_printer = models.Printer(
         ip=printer.ip,
         model=printer.model,
         connection_mode=printer.connection_mode,
-        snmp_community=printer.snmp_community,  # New
+        snmp_community=printer.snmp_community,
         toner_levels={},
-        errors=[]
+        errors=[],
+        department=printer.department,
+        location=printer.location
     )
     db.add(db_printer)
     db.commit()
@@ -42,11 +42,8 @@ def delete_printer(db: Session, printer_id: int):
         return True
     return False
 
-# User CRUD for real implementation
 def create_user(db: Session, user: UserCreate):
-    # Fake: hashed_password = user.password  # Uncomment for fake
-    hashed_password = get_password_hash(user.password)
-    db_user = models.User(username=user.username, hashed_password=hashed_password)
+    db_user = models.User(username=user.username, hashed_password=user.password, role=user.role)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -54,3 +51,14 @@ def create_user(db: Session, user: UserCreate):
 
 def get_user_by_username(db: Session, username: str):
     return db.query(models.User).filter(models.User.username == username).first()
+
+def get_users(db: Session):
+    return db.query(models.User).all()
+
+def delete_user(db: Session, user_id: int):
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if user:
+        db.delete(user)
+        db.commit()
+        return True
+    return False

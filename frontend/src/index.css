@@ -7,6 +7,6 @@
     @apply text-white;
   }
   body {
-    @apply antialiased; /* Smooth fonts */
+    @apply antialiased;
   }
 }

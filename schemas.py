@@ -1,12 +1,18 @@
-from pydantic import BaseModel, constr
+from pydantic import BaseModel
 
 class UserLogin(BaseModel):
     username: str
     password: str
 
 class UserCreate(BaseModel):
-    username: constr(min_length=3, strip_whitespace=True)  # At least 3 chars, no leading/trailing spaces
-    password: constr(min_length=8, strip_whitespace=True)  # At least 8 chars
+    username: str
+    password: str
+    role: str = "staff"
+
+class UserResponse(BaseModel):
+    id: int
+    username: str
+    role: str
 
 class Token(BaseModel):
     access_token: str
@@ -20,12 +26,16 @@ class PrinterCreate(BaseModel):
     model: str = None
     connection_mode: str = "web"
     snmp_community: str = "public"
+    department: str = None
+    location: str = None
 
 class PrinterStatus(BaseModel):
     toner_levels: dict
     errors: list[str]
     model: str
     ip: str
+    department: str = None
+    location: str = None
 
 class PrinterResponse(BaseModel):
     id: int
@@ -34,6 +44,8 @@ class PrinterResponse(BaseModel):
     toner_levels: dict
     errors: list[str]
     connection_mode: str
+    department: str | None
+    location: str | None
 
 class PrinterList(BaseModel):
     printers: list[PrinterResponse]
