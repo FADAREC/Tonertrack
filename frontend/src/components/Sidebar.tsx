@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { LayoutDashboard, Printer, Settings, LogOut, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
-const Sidebar: React.FC<{ darkMode: boolean; isOpen: boolean; toggleSidebar: () => void; role: string }> = ({ darkMode, isOpen, toggleSidebar, role }) => {
+const Sidebar: React.FC<{ darkMode: boolean; isOpen: boolean; toggleSidebar: () => void; role?: string }> = ({ darkMode, isOpen, toggleSidebar, role }) => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
     { icon: Printer, label: 'Printers', path: '/printers' },
