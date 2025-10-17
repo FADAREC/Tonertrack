@@ -7,7 +7,7 @@ import models
 from auth import create_access_token, get_current_user, UserInDB
 # from routers.printers import router as printers_router
 from schemas import UserCreate, UserResponse
-from crud import create_user, get_user_by_username, get_users, delete_user
+from crud import create_user, get_user_by_login, get_users
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -78,11 +78,11 @@ def add_user(user: UserCreate, db: Session = Depends(get_db), current_user: User
         raise HTTPException(status_code=403, detail="Admin only")
     return create_user(db, user)
 
-@app.delete("/users/{user_id}")
-def delete_user_endpoint(user_id: int, db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin only")
-    deleted = delete_user(db, user_id)
+# @app.delete("/users/{user_id}")
+# def delete_user_endpoint(user_id: int, db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
+#     if current_user.role != "admin":
+#         raise HTTPException(status_code=403, detail="Admin only")
+#     deleted = delete_user(db, user_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="User not found")
     return {"detail": "User deleted"}
