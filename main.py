@@ -1,14 +1,15 @@
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from jose import JWTError, jwt
 from database import engine, get_db
 import models
-from auth import create_access_token, get_current_user, UserInDB
-# from routers.printers import router as printers_router
+from auth import create_access_token, create_refresh_token, get_current_user, UserInDB, verify_password, SECRET_KEY, ALGORITHM
 from schemas import UserCreate, UserResponse, Token
 from crud import create_user, get_user_by_login, get_users
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
