@@ -10,6 +10,7 @@ from schemas import UserCreate, UserResponse, Token
 from crud import create_user, get_user_by_login, get_users
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+models.Base.metadata.drop_all(bind=engine)
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
