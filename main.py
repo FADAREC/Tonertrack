@@ -6,7 +6,7 @@ from database import engine, get_db
 import models
 from auth import create_access_token, get_current_user, UserInDB
 # from routers.printers import router as printers_router
-from schemas import UserCreate, UserResponse
+from schemas import UserCreate, UserResponse, Token
 from crud import create_user, get_user_by_login, get_users
 
 models.Base.metadata.create_all(bind=engine)
