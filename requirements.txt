@@ -38,7 +38,7 @@ ply==3.11
 propcache==0.3.2
 pyasn1==0.6.0
 pycparser==2.23
-pydantic==2.11.7
+pydantic[email]==2.11.7
 pydantic_core==2.33.2
 pyee==13.0.0
 Pygments==2.19.2
