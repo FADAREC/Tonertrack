@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from database import engine, get_db
 import models
 from auth import create_access_token, get_current_user, UserInDB
-from routers.printers import router as printers_router
+# from routers.printers import router as printers_router
 from schemas import UserCreate, UserResponse
 from crud import create_user, get_user_by_username, get_users, delete_user
 
@@ -21,7 +21,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(printers_router)
+# app.include_router(printers_router)
 
 @app.post("/register", response_model=Token)
 def register(user: UserCreate, db: Session = Depends(get_db)):
