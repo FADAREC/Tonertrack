@@ -23,25 +23,48 @@ app.add_middleware(
 
 app.include_router(printers_router)
 
-@app.post("/register")
+@app.post("/register", response_model=Token)
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = get_user_by_username(db, user.username)
+    existing_user = get_user_by_login(db, user.username) or get_user_by_login(db, user.email)
     if existing_user:
-        raise HTTPException(status_code=400, detail="Username already registered")
+        raise HTTPException(status_code=400, detail="Username or email already registered")
     created_user = create_user(db, user)
-    return {"detail": "User registered", "username": created_user.username}
+    access_token = create_access_token(data={"sub": created_user.username, "email": created_user.email})
+    refresh_token = create_refresh_token(data={"sub": created_user.username, "email": created_user.email})
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
-@app.post("/login")
+@app.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = get_user_by_username(db, form_data.username)
-    if not user or user.hashed_password != form_data.password:
-        raise HTTPException(status_code=400, detail="Incorrect username or password")
-    access_token = create_access_token(data={"sub": form_data.username, "role": user.role})
-    return {"access_token": access_token, "token_type": "bearer", "role": user.role}
+    user = get_user_by_login(db, form_data.username)
+    if not user or not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Incorrect login or password")
+    access_token = create_access_token(data={"sub": user.username, "email": user.email})
+    refresh_token = create_refresh_token(data={"sub": user.username, "email": user.email})
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
-@app.get("/health")
-def health_check(current_user: UserInDB = Depends(get_current_user), db: Session = Depends(get_db)):
-    return {"status": "healthy", "user": current_user.username, "role": current_user.role}
+@app.get("/me", response_model=UserResponse)
+def me(current_user: UserInDB = Depends(get_current_user)):
+    return current_user
+
+@app.post("/logout")
+def logout():
+    return {"detail": "Logout successful"}
+
+@app.post("/refresh", response_model=Token)
+def refresh(refresh_token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token")
+    try:
+        payload = jwt.decode(refresh_token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")
+        email: str = payload.get("email")
+        if username is None or payload.get("type") != "refresh":
+            raise credentials_exception
+        # Check activity (stub - add last_activity Column post-MVP)
+    except JWTError:
+        raise credentials_exception
+    access_token = create_access_token(data={"sub": username, "email": email})
+    new_refresh_token = create_refresh_token(data={"sub": username, "email": email})
+    return {"access_token": access_token, "refresh_token": new_refresh_token, "token_type": "bearer"}
 
 @app.get("/users", response_model=list[UserResponse])
 def list_users(db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
