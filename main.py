@@ -5,18 +5,14 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 from database import engine, get_db
 import models
-<<<<<<< HEAD
-from auth import create_access_token, get_current_user, UserInDB
-from routers.printers import router as printers_router
-from schemas import UserCreate, UserResponse, Token
-from crud import create_user, get_user_by_login, get_users, delete_user
-=======
 from auth import create_access_token, create_refresh_token, get_current_user, UserInDB, verify_password, SECRET_KEY, ALGORITHM
 from schemas import UserCreate, UserResponse, Token
-from crud import create_user, get_user_by_login, get_users
->>>>>>> aecf2eb4ddcc28bc448e05fa9bec3ce966a4d970
+from crud import create_user, get_user_by_login, get_users, delete_user
+# from routers.printers import router as printers_router
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+
+# ⚠️ Only use drop_all in development; it deletes your database tables each time
 models.Base.metadata.drop_all(bind=engine)
 models.Base.metadata.create_all(bind=engine)
 
@@ -32,21 +28,22 @@ app.add_middleware(
 
 # app.include_router(printers_router)
 
+
 @app.post("/register", response_model=Token)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     existing_user = get_user_by_login(db, user.username) or get_user_by_login(db, user.email)
     if existing_user:
         raise HTTPException(status_code=400, detail="Username or email already registered")
+    
     created_user = create_user(db, user)
     access_token = create_access_token(data={"sub": created_user.username, "email": created_user.email})
     refresh_token = create_refresh_token(data={"sub": created_user.username, "email": created_user.email})
+    
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
+
 @app.post("/login", response_model=Token)
-def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     user = get_user_by_login(db, form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect login or password")
@@ -54,19 +51,18 @@ def login(
     access_token = create_access_token(data={"sub": user.username, "email": user.email})
     refresh_token = create_refresh_token(data={"sub": user.username, "email": user.email})
     
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
+    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+
 
 @app.get("/me", response_model=UserResponse)
 def me(current_user: UserInDB = Depends(get_current_user)):
     return current_user
 
+
 @app.post("/logout")
 def logout():
     return {"detail": "Logout successful"}
+
 
 @app.post("/refresh", response_model=Token)
 def refresh(refresh_token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
@@ -77,12 +73,13 @@ def refresh(refresh_token: str = Depends(oauth2_scheme), db: Session = Depends(g
         email: str = payload.get("email")
         if username is None or payload.get("type") != "refresh":
             raise credentials_exception
-        # Check activity (stub - add last_activity Column post-MVP)
     except JWTError:
         raise credentials_exception
+
     access_token = create_access_token(data={"sub": username, "email": email})
     new_refresh_token = create_refresh_token(data={"sub": username, "email": email})
     return {"access_token": access_token, "refresh_token": new_refresh_token, "token_type": "bearer"}
+
 
 @app.get("/users", response_model=list[UserResponse])
 def list_users(db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
@@ -90,17 +87,18 @@ def list_users(db: Session = Depends(get_db), current_user: UserInDB = Depends(g
         raise HTTPException(status_code=403, detail="Admin only")
     return get_users(db)
 
+
 @app.post("/users", response_model=UserResponse)
 def add_user(user: UserCreate, db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     return create_user(db, user)
 
-# @app.delete("/users/{user_id}")
-# def delete_user_endpoint(user_id: int, db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
-#     if current_user.role != "admin":
-#         raise HTTPException(status_code=403, detail="Admin only")
-#     deleted = delete_user(db, user_id)
+@app.delete("/users/{user_id}")
+def delete_user_endpoint(user_id: int, db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    deleted = delete_user(db, user_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="User not found")
     return {"detail": "User deleted"}
