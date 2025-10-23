@@ -6,8 +6,8 @@ from database import engine, get_db
 import models
 from auth import create_access_token, get_current_user, UserInDB
 from routers.printers import router as printers_router
-from schemas import UserCreate, UserResponse
-from crud import create_user, get_user_by_username, get_users, delete_user
+from schemas import UserCreate, UserResponse, Token
+from crud import create_user, get_user_by_login, get_users, delete_user
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -34,13 +34,22 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
 @app.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
     user = get_user_by_login(db, form_data.username)
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect login or password")
+    
     access_token = create_access_token(data={"sub": user.username, "email": user.email})
     refresh_token = create_refresh_token(data={"sub": user.username, "email": user.email})
-    return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
+    
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer"
+    }
 
 @app.get("/me", response_model=UserResponse)
 def me(current_user: UserInDB = Depends(get_current_user)):

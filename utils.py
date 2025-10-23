@@ -18,6 +18,8 @@ from pysnmp.hlapi.asyncio import (
     ObjectIdentity
 )
 
+import cups
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -391,52 +393,14 @@ async def get_printer_status(ip: str, connection_mode: str, community: str = "pu
         else:
             raise ValueError(f"Could not retrieve status for printer at {ip}")
 
-# Test function to validate the fixes
-async def test_printer_discovery(subnet: str, test_ip: str = None):
-    """
-    Test function to validate the printer discovery and status retrieval.
-    """
-    try:
-        if test_ip:
-            # Test specific IP
-            print(f"Testing specific IP: {test_ip}")
-            
-            # Test SNMP printer detection
-            printer_info = await is_printer_via_snmp(test_ip)
-            if printer_info:
-                print(f"✓ Detected printer via SNMP: {printer_info}")
-                
-                # Test SNMP status retrieval
-                try:
-                    toner, errors = await get_status_via_snmp(test_ip)
-                    print(f"✓ SNMP Status - Toner: {toner}, Errors: {errors}")
-                except Exception as e:
-                    print(f"✗ SNMP status failed: {e}")
-                    
-                # Test web status retrieval
-                try:
-                    toner, errors = await get_status_via_web(test_ip)
-                    print(f"✓ Web Status - Toner: {toner}, Errors: {errors}")
-                except Exception as e:
-                    print(f"✗ Web status failed: {e}")
-            else:
-                print(f"✗ No printer detected at {test_ip}")
-        
-        # Test network scanning
-        print(f"Scanning network: {subnet}")
-        devices = await scan_network(subnet)
-        print(f"✓ Found {len(devices)} devices with open ports")
-        
-        for device in devices[:3]:  # Test first 3 devices
-            ip = device['ip']
-            printer_info = await is_printer_via_snmp(ip)
-            if printer_info:
-                print(f"✓ Found printer at {ip}: {printer_info}")
-                
-    except Exception as e:
-        print(f"Test failed: {e}")
+async def get_print_jobs():
+    conn = cups.Connection()
+    jobs = conn.getJobs()
+    return jobs
 
-# Example usage
-if __name__ == "__main__":
-    # Test with your network
-    asyncio.run(test_printer_discovery("192.168.1.0/24", "192.168.1.100"))
+#A simulation.
+async def simulate_job(printer_id: int, user: str, document: str, pages: int):
+    conn = cups.Connection()
+    printer = conn.getPrinters()[0]
+    job_id = conn.printFile(printer['printer-name'], document, "Simulated Job", {})
+    return job_id

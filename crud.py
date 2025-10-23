@@ -1,8 +1,26 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 import models
-from schemas import PrinterCreate, UserCreate, JobCreate, AlertCreate, SettingUpdate
+from schemas import PrinterCreate, UserCreate, JobCreate, AlertCreate, PrinterUpdate
 from auth import get_password_hash
+
+def create_user(db: Session, user: UserCreate):
+    hashed_password = get_password_hash(user.password)
+    db_user = models.User(username=user.username, email=user.email, hashed_password=hashed_password)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def get_user_by_login(db: Session, login: str):
+    return db.query(models.User).filter(
+        (models.User.username == login) | (models.User.email == login)
+    ).first()
+
+def get_users(db: Session):
+    return db.query(
+        models.User
+    ).all()
 
 def create_printer(db: Session, printer: PrinterCreate):
     db_printer = models.Printer(**printer.dict())
@@ -31,20 +49,6 @@ def delete_printer(db: Session, printer_id: int):
         db.commit()
         return True
     return False
-
-def create_user(db: Session, user: UserCreate):
-    hashed_password = get_password_hash(user.password)
-    db_user = models.User(username=user.username, email=user.email, hashed_password=hashed_password)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
-
-def get_user_by_login(db: Session, login: str):
-    return db.query(models.User).filter((models.User.username == login) | (models.User.email == login)).first()
-
-def get_users(db: Session):
-    return db.query(models.User).all()
 
 def create_job(db: Session, job: JobCreate):
     db_job = models.Job(**job.dict())
