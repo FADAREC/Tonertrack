@@ -1,14 +1,23 @@
-from fastapi import FastAPI, Depends, HTTPException
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
+from jose import JWTError, jwt
 from database import engine, get_db
 import models
+<<<<<<< HEAD
 from auth import create_access_token, get_current_user, UserInDB
 from routers.printers import router as printers_router
 from schemas import UserCreate, UserResponse, Token
 from crud import create_user, get_user_by_login, get_users, delete_user
+=======
+from auth import create_access_token, create_refresh_token, get_current_user, UserInDB, verify_password, SECRET_KEY, ALGORITHM
+from schemas import UserCreate, UserResponse, Token
+from crud import create_user, get_user_by_login, get_users
+>>>>>>> aecf2eb4ddcc28bc448e05fa9bec3ce966a4d970
 
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+models.Base.metadata.drop_all(bind=engine)
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
@@ -21,7 +30,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(printers_router)
+# app.include_router(printers_router)
 
 @app.post("/register", response_model=Token)
 def register(user: UserCreate, db: Session = Depends(get_db)):
@@ -87,11 +96,11 @@ def add_user(user: UserCreate, db: Session = Depends(get_db), current_user: User
         raise HTTPException(status_code=403, detail="Admin only")
     return create_user(db, user)
 
-@app.delete("/users/{user_id}")
-def delete_user_endpoint(user_id: int, db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
-    if current_user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin only")
-    deleted = delete_user(db, user_id)
+# @app.delete("/users/{user_id}")
+# def delete_user_endpoint(user_id: int, db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
+#     if current_user.role != "admin":
+#         raise HTTPException(status_code=403, detail="Admin only")
+#     deleted = delete_user(db, user_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="User not found")
     return {"detail": "User deleted"}
