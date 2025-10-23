@@ -7,7 +7,7 @@ from database import engine, get_db
 import models
 from auth import create_access_token, create_refresh_token, get_current_user, UserInDB, verify_password, SECRET_KEY, ALGORITHM
 from schemas import UserCreate, UserResponse, Token
-from crud import create_user, get_user_by_login, get_users, delete_user
+from crud import create_user, get_user_by_login, get_users
 # from routers.printers import router as printers_router
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
