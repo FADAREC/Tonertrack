@@ -8,7 +8,7 @@ import models
 from auth import create_access_token, create_refresh_token, get_current_user, UserInDB, verify_password, SECRET_KEY, ALGORITHM
 from schemas import UserCreate, UserResponse, Token
 from crud import create_user, get_user_by_login, get_users
-# from routers.printers import router as printers_router
+from routers.printers import router as printers_router
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 
@@ -24,7 +24,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# app.include_router(printers_router)
+app.include_router(printers_router)
 
 
 @app.post("/register", response_model=Token)
