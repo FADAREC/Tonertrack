@@ -37,7 +37,6 @@ pluggy==1.6.0
 ply==3.11
 propcache==0.3.2
 pyasn1==0.6.0
-pycups
 pycparser==2.23
 pydantic[email]==2.11.7
 pydantic_core==2.33.2
