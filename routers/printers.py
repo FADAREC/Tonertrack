@@ -13,19 +13,57 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/printers", tags=["printers"])
 
 
+# Pilot policy: free tier hard cap (no invites / single-user product rule is enforced in product policy)
+FREE_PRINTER_CAP = 5
+# After this many days without a status/toner update, effective status decays to unknown
+STALE_AFTER_DAYS = 7
+
+
+def _days_since(dt) -> float | None:
+    if dt is None:
+        return None
+    try:
+        if getattr(dt, "tzinfo", None) is not None:
+            dt = dt.replace(tzinfo=None)
+        return (datetime.utcnow() - dt).total_seconds() / 86400.0
+    except Exception:
+        return None
+
+
+def _effective_status(p: models.Printer) -> str:
+    """Apply toner + staleness so the board never shows a lying 'OK'."""
+    raw = (p.status or "unknown").lower()
+    toner = p.toner_level
+    days = _days_since(p.last_checked)
+
+    if days is not None and days > STALE_AFTER_DAYS:
+        return "unknown"
+
+    if toner is not None and toner <= 20:
+        return "low"
+    if raw in {"low", "offline", "online", "unknown", "ok"}:
+        if raw == "ok":
+            return "online"
+        return raw
+    return "unknown"
+
+
 def _serialize(p: models.Printer) -> dict:
     last = p.last_checked
-    if last is not None and hasattr(last, "isoformat"):
-        last = last.isoformat()
+    days = _days_since(last)
+    last_iso = last.isoformat() if last is not None and hasattr(last, "isoformat") else None
     return {
         "id": p.id,
         "name": p.name,
         "ip_address": p.ip_address,
         "location": p.location or "",
-        "status": p.status or "unknown",
+        "status": _effective_status(p),
+        "status_raw": (p.status or "unknown"),
         "toner_level": p.toner_level,
         "page_count": p.page_count or 0,
-        "last_checked": last,
+        "last_checked": last_iso,
+        "days_since_update": None if days is None else round(days, 1),
+        "stale": bool(days is not None and days > STALE_AFTER_DAYS),
         "connection_mode": p.connection_mode or "manual",
         "department": p.department or "",
         "access_type": p.access_type or "public",
@@ -55,6 +93,14 @@ def add_printer(
     mode = (printer.connection_mode or "manual").lower()
     if mode not in {"manual", "snmp", "web", "ping"}:
         raise HTTPException(status_code=400, detail="connection_mode must be manual, snmp, web, or ping")
+
+    # Free-tier hard cap (pilot). Pro flag can raise this later without changing the path.
+    existing = get_printers(db, skip=0, limit=1000)
+    if len(existing) >= FREE_PRINTER_CAP:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Free plan allows up to {FREE_PRINTER_CAP} printers. Upgrade to Pro for a full office fleet.",
+        )
 
     created = create_printer(db, printer)
 
@@ -115,6 +161,23 @@ def update_printer_endpoint(
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     data = updates.model_dump(exclude_unset=True) if hasattr(updates, "model_dump") else updates.dict(exclude_unset=True)
+    # Any human status/toner edit is a verification event — refresh last_checked for decay logic
+    if any(k in data for k in ("toner_level", "status", "name", "location", "notes", "ip_address")):
+        data["last_checked"] = datetime.utcnow()
+    if "toner_level" in data and data["toner_level"] is not None:
+        try:
+            lvl = int(data["toner_level"])
+            if lvl < 0 or lvl > 100:
+                raise HTTPException(status_code=400, detail="Toner level must be between 0 and 100.")
+            data["toner_level"] = lvl
+            if lvl <= 20:
+                data["status"] = "low"
+            elif data.get("status") in (None, "unknown", "low"):
+                data["status"] = "online"
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(status_code=400, detail="Toner level must be a number from 0 to 100.")
     updated = update_printer(db, printer, data)
     return _serialize(updated)
 

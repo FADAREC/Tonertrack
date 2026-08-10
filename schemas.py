@@ -65,9 +65,12 @@ class PrinterResponse(BaseModel):
     ip_address: Optional[str] = None
     location: Optional[str] = ""
     status: str = "unknown"
+    status_raw: Optional[str] = None
     toner_level: Optional[int] = None
     page_count: int = 0
     last_checked: Optional[str] = None
+    days_since_update: Optional[float] = None
+    stale: bool = False
     connection_mode: str = "manual"
     department: Optional[str] = ""
     access_type: str = "public"
