@@ -1,53 +1,49 @@
-# TonerTrack - Printer Toner Inventory System with Security Features
+# TonerTrack
 
-A full-featured inventory management system with real-time monitoring, smart alerts, and secure backend architecture. Built with security and DevSecOps practices in mind.
+Printer toner visibility for a company fleet. Hosted frontend + backend.
 
-## Tech Stack & Security Focus
-- **Backend:** Python + FastAPI
-- **Frontend:** TypeScript + React
-- **Database:** SQLite / PostgreSQL
-- **Security:** JWT Authentication, Input Validation, Rate Limiting, Structured Logging
-- **Tools:** Docker, GitHub Actions
+## What it does (v1 / Step 1)
 
-## Key Features & Security Implementation
-- Role-based access control (Admin, Staff)
-- Real-time toner level monitoring and low-stock alerts
-- Secure API endpoints with proper authentication
-- Input sanitization to prevent injection attacks
-- Audit logging for all critical actions
+- Fully hosted app (one URL)
+- Login / register
+- **Trust screen** — clear what we access; Manual only never contacts your network
+- **Fleet list** — name, location, status, toner (or Unknown)
+- **Add printer (manual)** — no network probe
 
-## Architecture
-The application follows a clean, layered architecture:
-- API Layer with FastAPI
-- Service Layer for business logic
-- Repository Layer for data access
-- Security middleware for request validation
+Network agent (listed IPs only) comes later. Subnet scan is disabled on purpose.
 
-## Local Setup
+## Trust model
+
+- Only printer IPs you add (when agent exists)
+- Never scans the rest of the LAN
+- Manual mode always available
+- Risks explained before any network path
+
+## Deploy on Render
+
+1. New Web Service from this repo, **Docker** runtime (uses `Dockerfile`).
+2. Add Postgres and set `DATABASE_URL`.
+3. Set `JWT_SECRET_KEY` (32+ chars), `ENV=production`.
+4. Set `CORS_ORIGINS` to your public app URL.
+5. Health check: `/health`.
+
+Or use `render.yaml` blueprint.
+
+## Local dev
+
 ```bash
-git clone https://github.com/FADAREC/Tonertrack.git
-cd Tonertrack
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
+export JWT_SECRET_KEY='dev-only-change-me-use-32chars-min!!'
 uvicorn main:app --reload
-Frontend:
-Bashcd frontend
-npm install
-npm run dev
 ```
 
+Frontend:
 
-## Security Practices Applied
+```bash
+cd frontend && npm install && REACT_APP_API_URL=http://localhost:8000 npm start
+```
 
-- JWT token authentication with expiration
-- Password hashing with bcrypt
-- CORS protection
-- Environment variable management for secrets
-- Basic rate limiting on auth endpoints
+## Pilot
 
-## Future Enhancements (DevSecOps Roadmap)
-
-- GitHub Actions CI/CD with security scanning (Bandit, Trufflehog)
-- Docker container security
-- Integration with AI-based anomaly detection for inventory fraud
-
-## Live Demo: ``Print Track Backend Docs``
+One office · ~30 printers · ~50% HP · Manual path first.

@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { User, Lock, ArrowRight } from 'lucide-react';
 import { authAPI } from '../services/api';
 
-const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
+const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode, onAuthed }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
@@ -17,11 +17,11 @@ const Auth: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
       return;
     }
     try {
-      const res = isRegister ? await authAPI.register(username, password) : await authAPI.login(username, password);
+      const res = isRegister ? await authAPI.register(username, `${username}@tonertrack.local`, password) : await authAPI.login(username, password);
       if (!isRegister) {
         localStorage.setItem('token', res.data.access_token);
-        localStorage.setItem('role', res.data.role);
-        window.location.reload();
+        if (res.data.role) localStorage.setItem('role', res.data.role);
+        if (onAuthed) onAuthed(); else window.location.reload();
       } else {
         setIsRegister(false);
         alert('Registered! Now login.');

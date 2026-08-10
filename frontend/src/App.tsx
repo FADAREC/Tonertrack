@@ -1,46 +1,94 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Auth from './components/auth';
-import Dashboard from './components/Dashboard';
-import PrinterList from './components/PrinterList';
-import AddPrinter from './components/AddPrinter';
-import Settings from './components/Settings';
+import TrustScreen from './components/TrustScreen';
+import FleetHome from './components/FleetHome';
+import AddPrinterSimple from './components/AddPrinterSimple';
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';
+import { trustAPI } from './services/api';
 
 function App() {
   const [darkMode, setDarkMode] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
+  const [trustReady, setTrustReady] = useState<boolean | null>(null);
 
   const toggleDarkMode = () => setDarkMode(!darkMode);
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
 
+  useEffect(() => {
+    if (!token) {
+      setTrustReady(null);
+      return;
+    }
+    const cached = localStorage.getItem('trust_mode');
+    if (cached) {
+      setTrustReady(true);
+      return;
+    }
+    trustAPI
+      .status()
+      .then((r) => {
+        if (r.data?.mode) {
+          localStorage.setItem('trust_mode', r.data.mode);
+          setTrustReady(true);
+        } else {
+          setTrustReady(false);
+        }
+      })
+      .catch(() => setTrustReady(false));
+  }, [token]);
+
+  // Re-read token after login (auth does full reload currently; keep state path too)
+  useEffect(() => {
+    const onStorage = () => setToken(localStorage.getItem('token'));
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  if (!token) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900 text-white' : 'bg-slate-100 text-gray-900'}`}>
+        <div className="w-full max-w-md p-6">
+          <Auth
+            darkMode={darkMode}
+            onAuthed={() => setToken(localStorage.getItem('token'))}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (trustReady === null) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900 text-white' : 'bg-slate-50'}`}>
+        <p className="opacity-60">Loading…</p>
+      </div>
+    );
+  }
+
+  if (trustReady === false) {
+    return <TrustScreen darkMode={darkMode} onDone={() => setTrustReady(true)} />;
+  }
+
   return (
     <Router>
-      <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-gradient-to-br from-purple-100 via-blue-100 to-indigo-100 text-gray-900'}`}>
-        {localStorage.getItem('token') ? (
-          <div className="flex h-screen overflow-hidden">
-            <Sidebar darkMode={darkMode} isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-            <div className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
-              <TopNav darkMode={darkMode} toggleDarkMode={toggleDarkMode} toggleSidebar={toggleSidebar} />
-              <main className="flex-1 overflow-y-auto p-6">
-                <Routes>
-                  <Route path="/" element={<Dashboard darkMode={darkMode} />} />
-                  <Route path="/printers" element={<PrinterList darkMode={darkMode} />} />
-                  <Route path="/add-printer" element={<AddPrinter darkMode={darkMode} />} />
-                  <Route path="/settings" element={<Settings darkMode={darkMode} toggleDarkMode={toggleDarkMode} />} />
-                </Routes>
-              </main>
-            </div>
+      <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-slate-50 text-gray-900'}`}>
+        <div className="flex h-screen overflow-hidden">
+          <Sidebar darkMode={darkMode} isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
+          <div className={`flex-1 flex flex-col overflow-hidden transition-all ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+            <TopNav darkMode={darkMode} toggleDarkMode={toggleDarkMode} toggleSidebar={toggleSidebar} />
+            <main className="flex-1 overflow-y-auto p-6">
+              <Routes>
+                <Route path="/" element={<FleetHome darkMode={darkMode} />} />
+                <Route path="/add-printer" element={<AddPrinterSimple darkMode={darkMode} />} />
+                <Route path="/printers" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </main>
           </div>
-        ) : (
-          <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-900/20 via-purple-900/20 to-indigo-900/20 animate-pulse" />
-            <div className="w-full max-w-md p-8 relative z-10">
-              <Auth darkMode={darkMode} />
-            </div>
-          </div>
-        )}
+        </div>
       </div>
     </Router>
   );

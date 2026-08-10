@@ -1,59 +1,105 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
+from typing import Optional, List
+from datetime import datetime
+
 
 class UserLogin(BaseModel):
-    login: str  #With this Users can login with Username or email
+    login: str
     password: str
+
 
 class UserCreate(BaseModel):
     username: str
     email: EmailStr
     password: str
 
+
 class Token(BaseModel):
     access_token: str
     refresh_token: str
     token_type: str
 
+
 class UserResponse(BaseModel):
     username: str
     email: str
+    role: str = "operator"
+
+    class Config:
+        from_attributes = True
+
 
 class ScanRequest(BaseModel):
     subnet: str
 
+
 class PrinterCreate(BaseModel):
     name: str
-    ip_address: str
-    location: str = None
-    connection_mode: str = "web"
+    ip_address: Optional[str] = None
+    location: Optional[str] = ""
+    connection_mode: str = "manual"  # snmp | web | ping | manual
     snmp_community: str = "public"
-    department: str = None
+    department: Optional[str] = ""
     access_type: str = "public"
-    allowed_users: list[str] = []
+    allowed_users: List[str] = Field(default_factory=list)
+    toner_level: Optional[int] = None  # for manual mode
+    notes: Optional[str] = ""
+
 
 class PrinterUpdate(BaseModel):
-    name: str = None
-    location: str = None
-    department: str = None
-    access_type: str = None
-    allowed_users: list[str] = None
+    name: Optional[str] = None
+    location: Optional[str] = None
+    department: Optional[str] = None
+    access_type: Optional[str] = None
+    allowed_users: Optional[List[str]] = None
+    toner_level: Optional[int] = None
+    status: Optional[str] = None
+    connection_mode: Optional[str] = None
+    notes: Optional[str] = None
+    ip_address: Optional[str] = None
+
 
 class PrinterResponse(BaseModel):
     id: int
     name: str
-    ip_address: str
-    location: str
-    status: str
-    toner_level: int
-    page_count: int
-    last_checked: str
-    connection_mode: str
-    department: str
-    access_type: str
-    allowed_users: list[str]
+    ip_address: Optional[str] = None
+    location: Optional[str] = ""
+    status: str = "unknown"
+    toner_level: Optional[int] = None
+    page_count: int = 0
+    last_checked: Optional[str] = None
+    connection_mode: str = "manual"
+    department: Optional[str] = ""
+    access_type: str = "public"
+    allowed_users: List[str] = Field(default_factory=list)
+    notes: Optional[str] = ""
+
+    class Config:
+        from_attributes = True
+
 
 class PrinterList(BaseModel):
-    printers: list[PrinterResponse]
+    printers: List[PrinterResponse]
+
+
+class TrustInfo(BaseModel):
+    """What we access / never access — shown before any network path."""
+    title: str
+    what_we_access: List[str]
+    what_we_never_access: List[str]
+    what_leaves_network: List[str]
+    kill_switch: str
+    modes: List[dict]
+
+
+class TrustChoice(BaseModel):
+    mode: str  # manual_only | agent_accepted
+
+
+class TrustStatus(BaseModel):
+    mode: str
+    accepted_at: Optional[str] = None
+
 
 class JobCreate(BaseModel):
     printer_id: int
@@ -63,36 +109,12 @@ class JobCreate(BaseModel):
     cost: float = 0.0
     status: str = "pending"
 
-class JobUpdate(BaseModel):
-    status: str = None
-
-class JobResponse(BaseModel):
-    id: int
-    printer_id: int
-    user: str
-    document: str
-    pages: int
-    cost: float
-    status: str
-    timestamp: str
-
-class JobList(BaseModel):
-    jobs: list[JobResponse]
 
 class AlertCreate(BaseModel):
     printer_id: int
     message: str
 
-class AlertResponse(BaseModel):
-    id: int
-    printer_id: int
-    message: str
-    timestamp: str
-    resolved: bool
-
-class AlertList(BaseModel):
-    alerts: list[AlertResponse]
 
 class SettingUpdate(BaseModel):
-    check_interval: int = None  # Seconds
+    check_interval: Optional[int] = None
     low_toner_threshold: int = 20
