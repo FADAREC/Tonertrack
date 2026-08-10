@@ -138,9 +138,14 @@ def trust_choice(
 
 @app.post("/register", response_model=Token)
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    existing = get_user_by_login(db, user.username) or get_user_by_login(db, user.email)
-    if existing:
-        raise HTTPException(status_code=400, detail="Username or email already registered")
+    if len(user.username.strip()) < 3:
+        raise HTTPException(status_code=400, detail="Username must be at least 3 characters.")
+    if len(user.password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+    if get_user_by_login(db, user.username.strip()):
+        raise HTTPException(status_code=400, detail="That username is already taken.")
+    if get_user_by_login(db, str(user.email).lower()):
+        raise HTTPException(status_code=400, detail="That email is already registered.")
     created = create_user(db, user)
     access_token = create_access_token(
         data={"sub": created.username, "email": created.email, "role": created.role}
@@ -153,9 +158,9 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
 @app.post("/login", response_model=Token)
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    user = get_user_by_login(db, form_data.username)
+    user = get_user_by_login(db, form_data.username.strip())
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=400, detail="Incorrect login or password")
+        raise HTTPException(status_code=400, detail="Wrong username or password.")
     role = getattr(user, "role", None) or "operator"
     access_token = create_access_token(
         data={"sub": user.username, "email": user.email, "role": role}

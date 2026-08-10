@@ -1,134 +1,200 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { User, Lock, ArrowRight } from 'lucide-react';
+import { User, Lock, Mail, ArrowRight } from 'lucide-react';
 import { authAPI } from '../services/api';
 
+function formatError(err: any): string {
+  if (!err) return 'Something went wrong. Try again.';
+  if (!err.response) {
+    if (err.message === 'Network Error') return 'Cannot reach the server. Check your connection.';
+    return err.message || 'Something went wrong. Try again.';
+  }
+  const detail = err.response.data?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail)) {
+    return detail
+      .map((d: any) => {
+        const field = Array.isArray(d.loc) ? d.loc.filter((x: any) => x !== 'body').join(' ') : '';
+        const msg = d.msg || d.message || JSON.stringify(d);
+        return field ? `${field}: ${msg}` : msg;
+      })
+      .join('. ');
+  }
+  if (detail && typeof detail === 'object') return JSON.stringify(detail);
+  return `Request failed (${err.response.status}). Try again.`;
+}
+
 const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode, onAuthed }) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [isRegister, setIsRegister] = useState(false);
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [error, setError] = useState('');
+  const [info, setInfo] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const inputCls =
+    'w-full pl-10 p-3 rounded-xl border bg-white/5 border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50';
+
+  const finishLogin = (accessToken: string, role?: string) => {
+    localStorage.setItem('token', accessToken);
+    if (role) localStorage.setItem('role', role);
+    if (onAuthed) onAuthed();
+    else window.location.reload();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (username.length < 3 || password.length < 6) {
-      setError('Username at least 3 chars, password at least 6');
+    setInfo('');
+
+    const user = username.trim();
+    const mail = email.trim().toLowerCase();
+    const pass = password;
+
+    if (user.length < 3) {
+      setError('Username must be at least 3 characters.');
       return;
     }
+    if (pass.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
+
+    if (isRegister) {
+      if (!mail || !mail.includes('@')) {
+        setError('Enter a valid email address.');
+        return;
+      }
+      if (pass !== confirm) {
+        setError('Passwords do not match.');
+        return;
+      }
+    }
+
+    setLoading(true);
     try {
-      const res = isRegister ? await authAPI.register(username, `${username}@tonertrack.local`, password) : await authAPI.login(username, password);
-      if (!isRegister) {
-        localStorage.setItem('token', res.data.access_token);
-        if (res.data.role) localStorage.setItem('role', res.data.role);
-        if (onAuthed) onAuthed(); else window.location.reload();
+      if (isRegister) {
+        const reg = await authAPI.register(user, mail, pass);
+        // Auto sign-in after successful registration
+        if (reg.data?.access_token) {
+          finishLogin(reg.data.access_token, reg.data.role);
+          return;
+        }
+        // Fallback: login with same credentials
+        const loginRes = await authAPI.login(user, pass);
+        finishLogin(loginRes.data.access_token, loginRes.data.role);
       } else {
-        setIsRegister(false);
-        alert('Registered! Now login.');
+        const loginRes = await authAPI.login(user, pass);
+        finishLogin(loginRes.data.access_token, loginRes.data.role);
       }
     } catch (err: any) {
-      let errorMsg = 'Unknown error';
-      if (err.response) {
-        const detail = err.response.data?.detail;
-        errorMsg = Array.isArray(detail) ? detail.map(d => d.msg).join(', ') : detail || `Error: ${err.response.status}`;
-      } else if (err.request) {
-        errorMsg = 'No server response. Check backend.';
-      } else {
-        errorMsg = err.message;
-      }
-      setError(errorMsg);
+      setError(formatError(err));
+    } finally {
+      setLoading(false);
     }
   };
 
-  return (
-    <motion.form
-      onSubmit={handleSubmit}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, type: 'spring' }}
-      className="space-y-6 bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10 shadow-2xl"
-    >
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center"
-      >
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-          {isRegister ? 'Sign Up' : 'Welcome Back'}
-        </h2>
-        <p className="text-white/70 text-sm">
-          {isRegister ? 'Create your account' : 'Sign in to your account'}
-        </p>
-      </motion.div>
+  const switchMode = () => {
+    setIsRegister(!isRegister);
+    setError('');
+    setInfo('');
+  };
 
-      <div className="space-y-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="relative"
-        >
-          <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5 bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10 shadow-2xl">
+      <div className="text-center">
+        <h2 className="text-2xl font-bold text-white mb-1">{isRegister ? 'Create account' : 'Sign in'}</h2>
+        <p className="text-white/60 text-sm">
+          {isRegister ? 'First account becomes admin for this workspace.' : 'Use your username and password.'}
+        </p>
+      </div>
+
+      <div className="space-y-3">
+        <div className="relative">
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
           <input
             type="text"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Username"
+            autoComplete="username"
             required
             minLength={3}
-            className="w-full pl-10 p-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 text-white placeholder-white/50 transition-all duration-300"
+            className={inputCls}
           />
-        </motion.div>
+        </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="relative"
-        >
-          <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/50 h-5 w-5" />
+        {isRegister && (
+          <div className="relative">
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              autoComplete="email"
+              required
+              className={inputCls}
+            />
+          </div>
+        )}
+
+        <div className="relative">
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
+            placeholder="Password (min 6 characters)"
+            autoComplete={isRegister ? 'new-password' : 'current-password'}
             required
             minLength={6}
-            autoComplete="current-password"
-            className="w-full pl-10 p-3 bg-white/5 backdrop-blur-md border border-white/20 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 text-white placeholder-white/50 transition-all duration-300"
+            className={inputCls}
           />
-        </motion.div>
+        </div>
+
+        {isRegister && (
+          <div className="relative">
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+            <input
+              type="password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              placeholder="Confirm password"
+              autoComplete="new-password"
+              required
+              minLength={6}
+              className={inputCls}
+            />
+          </div>
+        )}
       </div>
 
-      <motion.button
+      {error && (
+        <p className="text-red-300 text-sm bg-red-500/15 border border-red-400/30 rounded-xl p-3 text-center">
+          {error}
+        </p>
+      )}
+      {info && (
+        <p className="text-green-300 text-sm bg-green-500/15 border border-green-400/30 rounded-xl p-3 text-center">
+          {info}
+        </p>
+      )}
+
+      <button
         type="submit"
-        whileHover={{ scale: 1.02, boxShadow: '0 10px 20px rgba(59, 130, 246, 0.3)' }}
-        whileTap={{ scale: 0.98 }}
-        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl shadow-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium"
+        disabled={loading}
+        className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white p-3 rounded-xl font-medium transition"
       >
         <ArrowRight className="inline h-5 w-5 mr-2" />
-        {isRegister ? 'Sign Up' : 'Sign In'}
-      </motion.button>
+        {loading ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}
+      </button>
 
-      <motion.button
-        type="button"
-        onClick={() => setIsRegister(!isRegister)}
-        whileHover={{ scale: 1.02 }}
-        className="w-full text-white/70 hover:text-white text-sm font-medium transition-colors duration-200"
-      >
-        {isRegister ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-      </motion.button>
-
-      {error && (
-        <motion.p
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-red-400 text-center text-sm bg-red-500/10 p-3 rounded-xl backdrop-blur-md border border-red-400/30"
-        >
-          {error}
-        </motion.p>
-      )}
-    </motion.form>
+      <button type="button" onClick={switchMode} className="w-full text-white/70 hover:text-white text-sm">
+        {isRegister ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
+      </button>
+    </form>
   );
 };
 
