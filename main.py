@@ -206,21 +206,36 @@ def list_users(db: Session = Depends(get_db), current_user: UserInDB = Depends(g
 # Serve React build when present (single-URL hosting on Render)
 STATIC_DIR = Path(__file__).resolve().parent / "frontend" / "build"
 if STATIC_DIR.is_dir():
-    app.mount("/static", StaticFiles(directory=STATIC_DIR / "static"), name="static")
+    _static = STATIC_DIR / "static"
+    if _static.is_dir():
+        app.mount("/static", StaticFiles(directory=_static), name="static")
+
+    # Paths that are real API/docs GETs — do not return index.html for these
+    _API_ROOTS = {
+        "docs",
+        "redoc",
+        "openapi.json",
+        "health",
+        "printers",
+        "users",
+        "trust",
+        "me",
+        "refresh",
+        "logout",
+    }
+
+    @app.get("/")
+    async def spa_root():
+        index = STATIC_DIR / "index.html"
+        if index.is_file():
+            return FileResponse(index)
+        return {"detail": "Frontend not built. API is up.", "health": "/health"}
 
     @app.get("/{full_path:path}")
     async def spa_fallback(full_path: str):
-        if full_path.startswith("api") or full_path in {
-            "docs",
-            "openapi.json",
-            "redoc",
-            "health",
-            "login",
-            "register",
-            "me",
-            "trust",
-        }:
-            raise HTTPException(status_code=404)
+        first = full_path.split("/")[0]
+        if first in _API_ROOTS or full_path == "openapi.json":
+            raise HTTPException(status_code=404, detail="Not found")
         index = STATIC_DIR / "index.html"
         if index.is_file():
             return FileResponse(index)
