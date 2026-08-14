@@ -44,20 +44,19 @@ def create_printer(db: Session, printer: PrinterCreate):
     data["fail_streak"] = 0
     data["status_detail"] = None
 
-    if data.get("connection_mode") == "manual":
-        if data.get("toner_level") is not None:
-            # Explicit toner on create counts as first verification
-            from services.printer_status import normalize_toner_status
-            from datetime import datetime
-            tl, st = normalize_toner_status(data["toner_level"], data.get("status"))
-            data["toner_level"] = tl
-            data["status"] = st or "online"
-            now = datetime.utcnow()
-            data["last_verified_at"] = now
-            data["last_checked"] = now
-        else:
-            data["status"] = "unknown"
-            data["toner_level"] = None
+    # Toner/status rules apply for every connection_mode on create
+    if data.get("toner_level") is not None:
+        from services.printer_status import normalize_toner_status
+        from datetime import datetime
+        tl, st = normalize_toner_status(data["toner_level"], data.get("status"))
+        data["toner_level"] = tl
+        data["status"] = st or "online"
+        now = datetime.utcnow()
+        data["last_verified_at"] = now
+        data["last_checked"] = now
+    else:
+        data["status"] = data.get("status") or "unknown"
+        data["toner_level"] = None
 
     allowed = {c.name for c in models.Printer.__table__.columns}
     payload = {k: v for k, v in data.items() if k in allowed}
