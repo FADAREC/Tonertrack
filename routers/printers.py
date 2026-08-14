@@ -7,69 +7,36 @@ from schemas import PrinterCreate, PrinterUpdate, PrinterResponse, PrinterList, 
 from database import get_db
 from auth import get_current_user, UserInDB
 from crud import create_printer, get_printers, get_printer, update_printer, delete_printer
+from services.printer_status import (
+    apply_human_status,
+    serialize_status_fields,
+    STALE_AFTER_DAYS,
+)
 import models
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/printers", tags=["printers"])
 
 
-# Pilot policy: free tier hard cap (no invites / single-user product rule is enforced in product policy)
+# Pilot policy: free tier hard cap
 FREE_PRINTER_CAP = 5
-# After this many days without a status/toner update, effective status decays to unknown
-STALE_AFTER_DAYS = 7
-
-
-def _days_since(dt) -> float | None:
-    if dt is None:
-        return None
-    try:
-        if getattr(dt, "tzinfo", None) is not None:
-            dt = dt.replace(tzinfo=None)
-        return (datetime.utcnow() - dt).total_seconds() / 86400.0
-    except Exception:
-        return None
-
-
-def _effective_status(p: models.Printer) -> str:
-    """Apply toner + staleness so the board never shows a lying 'OK'."""
-    raw = (p.status or "unknown").lower()
-    toner = p.toner_level
-    days = _days_since(p.last_checked)
-
-    if days is not None and days > STALE_AFTER_DAYS:
-        return "unknown"
-
-    if toner is not None and toner <= 20:
-        return "low"
-    if raw in {"low", "offline", "online", "unknown", "ok"}:
-        if raw == "ok":
-            return "online"
-        return raw
-    return "unknown"
 
 
 def _serialize(p: models.Printer) -> dict:
-    last = p.last_checked
-    days = _days_since(last)
-    last_iso = last.isoformat() if last is not None and hasattr(last, "isoformat") else None
-    return {
+    base = {
         "id": p.id,
         "name": p.name,
         "ip_address": p.ip_address,
         "location": p.location or "",
-        "status": _effective_status(p),
-        "status_raw": (p.status or "unknown"),
-        "toner_level": p.toner_level,
         "page_count": p.page_count or 0,
-        "last_checked": last_iso,
-        "days_since_update": None if days is None else round(days, 1),
-        "stale": bool(days is not None and days > STALE_AFTER_DAYS),
         "connection_mode": p.connection_mode or "manual",
         "department": p.department or "",
         "access_type": p.access_type or "public",
         "allowed_users": p.allowed_users or [],
         "notes": getattr(p, "notes", None) or "",
     }
+    base.update(serialize_status_fields(p))
+    return base
 
 
 @router.get("/", response_model=PrinterList)
@@ -161,25 +128,28 @@ def update_printer_endpoint(
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     data = updates.model_dump(exclude_unset=True) if hasattr(updates, "model_dump") else updates.dict(exclude_unset=True)
-    # Any human status/toner edit is a verification event — refresh last_checked for decay logic
-    if any(k in data for k in ("toner_level", "status", "name", "location", "notes", "ip_address")):
-        data["last_checked"] = datetime.utcnow()
-    if "toner_level" in data and data["toner_level"] is not None:
+
+    status_keys = set(data.keys()) & {"status", "toner_level"}
+    meta_keys = set(data.keys()) - {"status", "toner_level"}
+
+    # Metadata only — never touches verification clocks
+    if meta_keys:
+        meta = {k: data[k] for k in meta_keys}
+        printer = update_printer(db, printer, meta)
+
+    # Status / toner verification — shared domain path (resets fail_streak)
+    if status_keys:
         try:
-            lvl = int(data["toner_level"])
-            if lvl < 0 or lvl > 100:
-                raise HTTPException(status_code=400, detail="Toner level must be between 0 and 100.")
-            data["toner_level"] = lvl
-            if lvl <= 20:
-                data["status"] = "low"
-            elif data.get("status") in (None, "unknown", "low"):
-                data["status"] = "online"
-        except HTTPException:
-            raise
-        except Exception:
-            raise HTTPException(status_code=400, detail="Toner level must be a number from 0 to 100.")
-    updated = update_printer(db, printer, data)
-    return _serialize(updated)
+            printer = apply_human_status(
+                db,
+                printer,
+                status=data.get("status") if "status" in data else None,
+                toner_level=data["toner_level"] if "toner_level" in data else ...,
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+
+    return _serialize(printer)
 
 
 @router.delete("/{printer_id}")

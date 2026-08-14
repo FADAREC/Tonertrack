@@ -37,14 +37,31 @@ def get_users(db: Session):
 
 def create_printer(db: Session, printer: PrinterCreate):
     data = printer.model_dump() if hasattr(printer, "model_dump") else printer.dict()
-    # Manual mode: no probe; status unknown unless toner provided
+    # Creation is not verification — clocks stay null until first status/toner write
+    data["last_checked"] = None
+    data["last_verified_at"] = None
+    data["last_attempt_at"] = None
+    data["fail_streak"] = 0
+    data["status_detail"] = None
+
     if data.get("connection_mode") == "manual":
         if data.get("toner_level") is not None:
-            data["status"] = "low" if data["toner_level"] <= 20 else "online"
+            # Explicit toner on create counts as first verification
+            from services.printer_status import normalize_toner_status
+            from datetime import datetime
+            tl, st = normalize_toner_status(data["toner_level"], data.get("status"))
+            data["toner_level"] = tl
+            data["status"] = st or "online"
+            now = datetime.utcnow()
+            data["last_verified_at"] = now
+            data["last_checked"] = now
         else:
             data["status"] = "unknown"
             data["toner_level"] = None
-    db_printer = models.Printer(**{k: v for k, v in data.items() if hasattr(models.Printer, k)})
+
+    allowed = {c.name for c in models.Printer.__table__.columns}
+    payload = {k: v for k, v in data.items() if k in allowed}
+    db_printer = models.Printer(**payload)
     db.add(db_printer)
     db.commit()
     db.refresh(db_printer)
@@ -60,12 +77,15 @@ def get_printer(db: Session, printer_id: int):
 
 
 def update_printer(db: Session, printer: models.Printer, updates: dict):
+    """Metadata or raw field updates. Status/toner verification must use services.printer_status."""
     for key, value in updates.items():
-        if value is not None and hasattr(printer, key):
+        if key in {"last_checked", "last_verified_at", "last_attempt_at", "fail_streak"}:
+            # Only domain helpers should set clocks / streak
+            if key in updates and key != "fail_streak":
+                setattr(printer, key, value)
+            continue
+        if hasattr(printer, key):
             setattr(printer, key, value)
-    if "toner_level" in updates and updates["toner_level"] is not None:
-        level = updates["toner_level"]
-        printer.status = "low" if level <= 20 else "online"
     db.commit()
     db.refresh(printer)
     return printer

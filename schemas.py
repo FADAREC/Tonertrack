@@ -66,11 +66,16 @@ class PrinterResponse(BaseModel):
     location: Optional[str] = ""
     status: str = "unknown"
     status_raw: Optional[str] = None
+    status_detail: Optional[str] = None
+    status_note: Optional[str] = None
     toner_level: Optional[int] = None
     page_count: int = 0
     last_checked: Optional[str] = None
+    last_verified_at: Optional[str] = None
+    last_attempt_at: Optional[str] = None
     days_since_update: Optional[float] = None
     stale: bool = False
+    fail_streak: int = 0
     connection_mode: str = "manual"
     department: Optional[str] = ""
     access_type: str = "public"
@@ -121,3 +126,13 @@ class AlertCreate(BaseModel):
 class SettingUpdate(BaseModel):
     check_interval: Optional[int] = None
     low_toner_threshold: int = 20
+
+
+class AgentReportRequest(BaseModel):
+    """Narrow write surface for agent tokens — status verification only."""
+    printer_id: int
+    ok: bool
+    status: Optional[str] = None
+    toner_level: Optional[int] = None
+    status_detail: Optional[str] = None
+    device_reported_offline: bool = False

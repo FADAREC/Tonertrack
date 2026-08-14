@@ -13,8 +13,11 @@ interface PrinterRow {
   toner_level: number | null;
   connection_mode: string;
   last_checked?: string | null;
+  last_verified_at?: string | null;
   days_since_update?: number | null;
   stale?: boolean;
+  status_note?: string | null;
+  status_detail?: string | null;
 }
 
 function statusLabel(p: PrinterRow): { text: string; color: string; bg: string } {
@@ -34,13 +37,14 @@ function statusLabel(p: PrinterRow): { text: string; color: string; bg: string }
 }
 
 function ageText(p: PrinterRow): string {
-  if (p.days_since_update == null && !p.last_checked) return 'Never updated';
+  if (p.status_note) return p.status_note;
+  if (p.days_since_update == null && !p.last_checked && !p.last_verified_at) return 'Never verified';
   const d = p.days_since_update;
-  if (d == null) return 'Updated';
-  if (d < 0.04) return 'Updated just now';
-  if (d < 1) return `Updated ${Math.round(d * 24)}h ago`;
-  if (d < 2) return 'Updated 1 day ago';
-  return `Updated ${Math.round(d)} days ago`;
+  if (d == null) return 'Status verified';
+  if (d < 0.04) return 'Status verified just now';
+  if (d < 1) return `Status verified ${Math.round(d * 24)}h ago`;
+  if (d < 2) return 'Status verified 1 day ago';
+  return `Status verified ${Math.round(d)} days ago`;
 }
 
 const FleetHome: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {

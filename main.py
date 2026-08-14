@@ -28,6 +28,7 @@ from auth import (
 from schemas import UserCreate, UserResponse, Token, TrustInfo, TrustChoice, TrustStatus
 from crud import create_user, get_user_by_login, get_users, get_trust, set_trust
 from routers.printers import router as printers_router
+from routers.agent import router as agent_router
 
 # Fail fast if secrets missing (production)
 _env = os.getenv("ENV", os.getenv("RENDER", "") and "production" or "development")
@@ -41,6 +42,16 @@ elif not SECRET_KEY:
     SECRET_KEY = auth_mod.SECRET_KEY
 
 models.Base.metadata.create_all(bind=engine)
+# Apply additive migrations when present (Alembic)
+try:
+    from alembic.config import Config
+    from alembic import command
+    import os
+    cfg = Config(os.path.join(os.path.dirname(__file__), "alembic.ini"))
+    command.upgrade(cfg, "head")
+except Exception as _mig_err:
+    import logging
+    logging.getLogger("uvicorn.error").warning("Alembic upgrade skipped: %s", _mig_err)
 
 app = FastAPI(title="TonerTrack", version="1.0.0")
 
@@ -59,6 +70,7 @@ app.add_middleware(
 )
 
 app.include_router(printers_router)
+app.include_router(agent_router)
 
 
 @app.get("/health")

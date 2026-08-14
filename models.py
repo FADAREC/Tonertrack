@@ -11,9 +11,15 @@ class Printer(Base):
     ip_address = Column(String, index=True)
     location = Column(String, default="")
     status = Column(String, default="unknown")
+    status_detail = Column(String, nullable=True)  # unreachable | device_reported | None
     toner_level = Column(Integer, nullable=True)
     page_count = Column(Integer, default=0)
-    last_checked = Column(DateTime, default=func.now())
+    # Legacy mirror of last successful verification (kept for older rows/clients)
+    last_checked = Column(DateTime, nullable=True)
+    # Two-clock model
+    last_verified_at = Column(DateTime, nullable=True)
+    last_attempt_at = Column(DateTime, nullable=True)
+    fail_streak = Column(Integer, default=0, nullable=False)
     connection_mode = Column(String, default="manual")
     snmp_community = Column(String, default="public")
     department = Column(String, default="")
@@ -51,6 +57,7 @@ class Alert(Base):
     id = Column(Integer, primary_key=True, index=True)
     printer_id = Column(Integer, ForeignKey("printers.id"))
     message = Column(String)
+    alert_type = Column(String, default="low_toner", index=True)
     timestamp = Column(DateTime, default=func.now())
     resolved = Column(Boolean, default=False)
 
