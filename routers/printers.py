@@ -71,8 +71,10 @@ def add_printer(
 
     created = create_printer(db, printer)
 
-    # Only probe when not manual — and only the IP the user typed
+    # Only probe when not manual — and only the IP the user typed.
+    # Status writes go through printer_status helpers, not update_printer clocks.
     if mode != "manual" and created.ip_address:
+        from services.printer_status import apply_agent_result
         try:
             from utils import get_printer_status
             import asyncio
@@ -80,7 +82,6 @@ def add_printer(
             result = asyncio.get_event_loop().run_until_complete(
                 get_printer_status(created.ip_address, mode, created.snmp_community or "public")
             )
-            # Best-effort parse; keep unknown on failure
             status = "online"
             toner = created.toner_level
             if isinstance(result, dict):
@@ -88,18 +89,21 @@ def add_printer(
                 details = result.get("details") or {}
                 if isinstance(details, dict) and "black" in details:
                     toner = details.get("black")
-            update_printer(
+            created = apply_agent_result(
                 db,
                 created,
-                {
-                    "status": status,
-                    "toner_level": toner,
-                    "last_checked": datetime.utcnow(),
-                },
+                ok=True,
+                status=status,
+                toner_level=toner,
             )
         except Exception as e:
             logger.warning("Initial status failed for %s: %s", created.ip_address, e)
-            update_printer(db, created, {"status": "unknown", "last_checked": datetime.utcnow()})
+            created = apply_agent_result(
+                db,
+                created,
+                ok=False,
+                status_detail="unreachable",
+            )
 
     db.refresh(created)
     return _serialize(created)
