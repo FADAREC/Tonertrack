@@ -77,12 +77,16 @@ def get_printer(db: Session, printer_id: int):
 
 
 def update_printer(db: Session, printer: models.Printer, updates: dict):
-    """Metadata or raw field updates. Status/toner verification must use services.printer_status."""
+    """Metadata-only updates.
+
+    Never sets last_verified_at, last_attempt_at, last_checked, or fail_streak.
+    Those belong exclusively to services.printer_status (direct ORM or atomic SQL).
+    Passing them here is ignored so a dict-based call cannot fake verification
+    or silently drop a streak reset that the caller thought was applied.
+    """
+    protected = {"last_checked", "last_verified_at", "last_attempt_at", "fail_streak"}
     for key, value in updates.items():
-        if key in {"last_checked", "last_verified_at", "last_attempt_at", "fail_streak"}:
-            # Only domain helpers should set clocks / streak
-            if key in updates and key != "fail_streak":
-                setattr(printer, key, value)
+        if key in protected:
             continue
         if hasattr(printer, key):
             setattr(printer, key, value)
