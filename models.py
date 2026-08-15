@@ -4,6 +4,12 @@ from database import Base
 
 
 class Printer(Base):
+    """Fleet device row.
+
+    PILOT: single-tenant — there is no workspace_id. All printers on this
+    deployment share one global table. A second office on the same app would
+    see the same fleet. Multi-tenancy is a future migration, not a missing filter.
+    """
     __tablename__ = "printers"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -81,7 +87,11 @@ class TrustPreference(Base):
 
 
 class AgentToken(Base):
-    """Opaque API key for local agents/one-shot reporters. Hashed at rest; shown once."""
+    """Opaque API key for local agents/one-shot reporters. Hashed at rest; shown once.
+
+    PILOT: single-tenant — token is deployment-scoped, not workspace-scoped.
+    Any valid token can report against any printer_id on this instance.
+    """
     __tablename__ = "agent_tokens"
 
     id = Column(Integer, primary_key=True, index=True)
