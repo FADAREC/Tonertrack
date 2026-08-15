@@ -136,3 +136,27 @@ class AgentReportRequest(BaseModel):
     toner_level: Optional[int] = None
     status_detail: Optional[str] = None
     device_reported_offline: bool = False
+
+
+class AgentTokenCreate(BaseModel):
+    name: str = "default"
+
+
+class AgentTokenPublic(BaseModel):
+    id: int
+    name: str
+    token_prefix: str
+    created_by: str
+    created_at: Optional[str] = None
+    last_used_at: Optional[str] = None
+    revoked_at: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class AgentTokenCreated(BaseModel):
+    """Returned only at creation — includes raw token once."""
+    token: AgentTokenPublic
+    raw_token: str
+    warning: str = "Store this token now. It will not be shown again."
