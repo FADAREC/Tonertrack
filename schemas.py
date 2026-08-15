@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from typing import Optional, List, Literal
 from datetime import datetime
 
 
@@ -128,14 +128,23 @@ class SettingUpdate(BaseModel):
     low_toner_threshold: int = 20
 
 
+StatusDetailValue = Literal[
+    "unreachable",
+    "device_reported",
+    "probe_skipped_cloud_disabled",
+]
+
+
 class AgentReportRequest(BaseModel):
-    """Narrow write surface for agent tokens — status verification only."""
+    """Narrow write surface for agent tokens — status verification only.
+
+    Unknown status_detail values are rejected (422), not ignored.
+    """
     printer_id: int
     ok: bool
     status: Optional[str] = None
     toner_level: Optional[int] = None
-    status_detail: Optional[str] = None
-    device_reported_offline: bool = False
+    status_detail: Optional[StatusDetailValue] = None
 
 
 class AgentTokenCreate(BaseModel):

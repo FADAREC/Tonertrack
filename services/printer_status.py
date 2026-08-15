@@ -89,13 +89,20 @@ def apply_human_status(
     printer.last_verified_at = now
     printer.last_checked = now  # legacy mirror
     printer.fail_streak = 0
-    if getattr(printer, "status_detail", None) is not None:
-        printer.status_detail = None
+    # Human verification fully supersedes agent-side detail (e.g. leftover unreachable)
+    printer.status_detail = None
 
     db.add(printer)
     db.commit()
     db.refresh(printer)
     return printer
+
+
+ALLOWED_STATUS_DETAILS = frozenset({
+    "unreachable",
+    "device_reported",
+    "probe_skipped_cloud_disabled",
+})
 
 
 def apply_agent_result(
@@ -106,21 +113,22 @@ def apply_agent_result(
     status: Optional[str] = None,
     toner_level: Optional[int] = None,
     status_detail: Optional[str] = None,
-    device_reported_offline: bool = False,
 ) -> models.Printer:
     """
     Agent probe result.
 
-    - ok=True, successful read: update status/toner, clear streak, touch both clocks
-    - device_reported_offline: trust immediately (reachable, device says off)
-    - ok=False unreachable: atomic streak++, only flip display after N or fail-window
+    - ok=True + status_detail=device_reported: reachable, device says offline (immediate)
+    - ok=True otherwise: successful read; clear streak; touch both clocks
+    - ok=False: unreachable path; atomic streak++; flip display after N or fail-window
+
+    status_detail must be one of ALLOWED_STATUS_DETAILS or None (validated at API boundary).
     """
     now = _utcnow()
     printer.last_attempt_at = now
 
-    if ok and device_reported_offline:
+    if ok and status_detail == "device_reported":
         printer.status = status or "offline"
-        printer.status_detail = status_detail or "device_reported"
+        printer.status_detail = "device_reported"
         printer.fail_streak = 0
         printer.last_verified_at = now
         printer.last_checked = now

@@ -133,7 +133,6 @@ def agent_report(
         status=body.status,
         toner_level=body.toner_level,
         status_detail=body.status_detail,
-        device_reported_offline=body.device_reported_offline,
     )
     touch_last_used(db, agent)
     return _serialize(updated)
