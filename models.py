@@ -78,3 +78,30 @@ class TrustPreference(Base):
     mode = Column(String, default="manual_only")
     accepted_at = Column(DateTime, nullable=True)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
+
+
+class AgentToken(Base):
+    """Opaque API key for local agents/one-shot reporters. Hashed at rest; shown once."""
+    __tablename__ = "agent_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, default="default")
+    token_hash = Column(String, nullable=False, unique=True, index=True)
+    token_prefix = Column(String, nullable=False)  # first 8 chars for admin UI identification
+    created_by = Column(String, nullable=False)
+    created_at = Column(DateTime, default=func.now())
+    last_used_at = Column(DateTime, nullable=True)
+    revoked_at = Column(DateTime, nullable=True)
+    revoked_by = Column(String, nullable=True)
+
+
+class AuditEvent(Base):
+    """Simple audit trail (token issue/revoke, trust, admin transfer, etc.)."""
+    __tablename__ = "audit_events"
+
+    id = Column(Integer, primary_key=True, index=True)
+    action = Column(String, nullable=False, index=True)
+    actor = Column(String, nullable=False)
+    detail = Column(String, default="")
+    created_at = Column(DateTime, default=func.now())
+
