@@ -71,41 +71,23 @@ def add_printer(
 
     created = create_printer(db, printer)
 
-    # Only probe when not manual — and only the IP the user typed.
-    # Status writes go through printer_status helpers, not update_printer clocks.
+    # Cloud must never dial customer printer IPs (private LAN is unreachable from
+    # Render; public/port-forward would still violate the trust model).
+    # Probing belongs on a local agent/one-shot inside the customer network.
+    # Hard off — not an RFC1918 conditional.
     if mode != "manual" and created.ip_address:
-        from services.printer_status import apply_agent_result
-        try:
-            from utils import get_printer_status
-            import asyncio
+        logger.warning(
+            "Cloud probe disabled: skipped outbound check to %s (mode=%s). "
+            "Use a local agent or one-shot reporter on the office LAN.",
+            created.ip_address,
+            mode,
+        )
+        created.status_detail = "probe_skipped_cloud_disabled"
+        # Do not touch last_verified_at / fail_streak — nothing was verified or attempted on-LAN
+        db.add(created)
+        db.commit()
+        db.refresh(created)
 
-            result = asyncio.get_event_loop().run_until_complete(
-                get_printer_status(created.ip_address, mode, created.snmp_community or "public")
-            )
-            status = "online"
-            toner = created.toner_level
-            if isinstance(result, dict):
-                status = result.get("status", "online")
-                details = result.get("details") or {}
-                if isinstance(details, dict) and "black" in details:
-                    toner = details.get("black")
-            created = apply_agent_result(
-                db,
-                created,
-                ok=True,
-                status=status,
-                toner_level=toner,
-            )
-        except Exception as e:
-            logger.warning("Initial status failed for %s: %s", created.ip_address, e)
-            created = apply_agent_result(
-                db,
-                created,
-                ok=False,
-                status_detail="unreachable",
-            )
-
-    db.refresh(created)
     return _serialize(created)
 
 
