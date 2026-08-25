@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Printer, Plus, RefreshCw, Trash2, Check } from 'lucide-react';
 import { printersAPI } from '../services/api';
+import api from '../services/api';
 import { Link } from 'react-router-dom';
 
 interface PrinterRow {
@@ -54,6 +55,10 @@ const FleetHome: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [tonerDraft, setTonerDraft] = useState('');
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [pollSeconds, setPollSeconds] = useState<number | null>(null);
+  const [pollLabel, setPollLabel] = useState('');
+  const [allowedIntervals, setAllowedIntervals] = useState<number[]>([]);
+  const [pollSaving, setPollSaving] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -68,9 +73,35 @@ const FleetHome: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
     }
   };
 
+  const loadPollConfig = async () => {
+    try {
+      const res = await api.get('/agent/poll-config');
+      setPollSeconds(res.data.poll_interval_seconds);
+      setPollLabel(res.data.label || '');
+      setAllowedIntervals(res.data.allowed_intervals_seconds || []);
+    } catch {
+      /* non-admin or not deployed yet */
+    }
+  };
+
   useEffect(() => {
     load();
+    loadPollConfig();
   }, []);
+
+  const savePollInterval = async (seconds: number) => {
+    setPollSaving(true);
+    setError('');
+    try {
+      const res = await api.put('/agent/poll-config', { poll_interval_seconds: seconds });
+      setPollSeconds(res.data.poll_interval_seconds);
+      setPollLabel(res.data.label || '');
+    } catch (e: any) {
+      setError(e?.response?.data?.detail || 'Could not save poll interval (admin only)');
+    } finally {
+      setPollSaving(false);
+    }
+  };
 
   const saveToner = async (id: number) => {
     const n = parseInt(tonerDraft, 10);
@@ -124,6 +155,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
             {printers.length >= 5 && ` · free plan full (5/5)`}
             {lowCount > 0 && ` · ${lowCount} low toner`}
             {staleCount > 0 && ` · ${staleCount} need update`}
+            {pollLabel && ` · helper polls every ${pollLabel}`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -142,6 +174,34 @@ const FleetHome: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
           </Link>
         </div>
       </div>
+
+      {allowedIntervals.length > 0 && (
+        <div className={`rounded-xl border p-4 ${panel}`}>
+          <p className="text-sm font-medium mb-1">Office helper poll frequency</p>
+          <p className={`text-xs mb-3 ${muted}`}>
+            How often the PC inside the office should check listed printers and update this board.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {allowedIntervals.map((s) => (
+              <button
+                key={s}
+                type="button"
+                disabled={pollSaving}
+                onClick={() => savePollInterval(s)}
+                className={`px-3 py-1.5 rounded-lg text-xs border ${
+                  pollSeconds === s
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : darkMode
+                      ? 'border-gray-600'
+                      : 'border-gray-300'
+                }`}
+              >
+                {s < 3600 ? `${s / 60} min` : s < 86400 ? `${s / 3600} h` : `${s / 86400} d`}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {error && (
         <p className="text-red-300 text-sm bg-red-500/10 border border-red-400/30 rounded-xl p-3">{error}</p>

@@ -74,6 +74,7 @@ class PrinterResponse(BaseModel):
     last_verified_at: Optional[str] = None
     last_attempt_at: Optional[str] = None
     days_since_update: Optional[float] = None
+    seconds_since_verified: Optional[int] = None
     stale: bool = False
     fail_streak: int = 0
     connection_mode: str = "manual"

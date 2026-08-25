@@ -207,6 +207,24 @@ def effective_status(printer: models.Printer) -> str:
     return "unknown"
 
 
+def _human_age(dt) -> str | None:
+    if dt is None:
+        return None
+    days = _days_since(dt)
+    if days is None:
+        return None
+    secs = days * 86400
+    if secs < 60:
+        return f"{int(max(secs, 0))}s ago"
+    if secs < 3600:
+        return f"{int(secs // 60)} min ago"
+    if secs < 86400:
+        h = int(secs // 3600)
+        return f"{h} hour{'s' if h != 1 else ''} ago"
+    d = int(days)
+    return f"{d} day{'s' if d != 1 else ''} ago"
+
+
 def serialize_status_fields(printer: models.Printer) -> dict:
     verified = getattr(printer, "last_verified_at", None) or printer.last_checked
     attempt = getattr(printer, "last_attempt_at", None)
@@ -215,13 +233,20 @@ def serialize_status_fields(printer: models.Printer) -> dict:
     eff = effective_status(printer)
 
     detail = getattr(printer, "status_detail", None)
+    verified_age = _human_age(verified)
+    attempt_age = _human_age(attempt)
+
     age_note = None
-    if verified is None and printer.toner_level is None and (printer.status or "unknown") == "unknown":
-        age_note = "Never verified"
+    if verified is None and (printer.toner_level is None) and (printer.status or "unknown") == "unknown":
+        age_note = "Never verified — no poll yet"
     elif stale and printer.toner_level is not None:
-        age_note = f"Unknown — last reported {printer.toner_level}%, {int(days)} days ago"
+        age_note = f"Stale — last good read {printer.toner_level}% ({verified_age})"
     elif stale:
-        age_note = f"Unknown — last verified {int(days)} days ago"
+        age_note = f"Stale — last good read {verified_age}"
+    elif verified_age:
+        age_note = f"Last good read {verified_age}"
+        if attempt_age and attempt != verified:
+            age_note += f" · last poll try {attempt_age}"
 
     return {
         "status": eff,
@@ -232,6 +257,7 @@ def serialize_status_fields(printer: models.Printer) -> dict:
         "last_verified_at": verified.isoformat() if verified is not None and hasattr(verified, "isoformat") else None,
         "last_attempt_at": attempt.isoformat() if attempt is not None and hasattr(attempt, "isoformat") else None,
         "days_since_update": None if days is None else round(days, 1),
+        "seconds_since_verified": None if days is None else int(days * 86400),
         "stale": stale,
         "fail_streak": int(getattr(printer, "fail_streak", 0) or 0),
         "status_note": age_note,
