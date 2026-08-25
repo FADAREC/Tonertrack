@@ -74,6 +74,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
   const [pollLabel, setPollLabel] = useState('');
   const [allowedIntervals, setAllowedIntervals] = useState<number[]>([]);
   const [pollSaving, setPollSaving] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -81,6 +82,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
     try {
       const res = await printersAPI.list();
       setPrinters(res.data.printers || []);
+      setLastRefresh(new Date());
     } catch (e: any) {
       setError(e?.response?.data?.detail || 'Could not load printers');
     } finally {
@@ -167,6 +169,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
           <p className="text-sm text-zinc-500 mt-1">
             Live status from your office helper · only printers you list
             {pollLabel ? ` · polls every ${pollLabel}` : ''}
+            {lastRefresh ? ` · board refreshed ${lastRefresh.toLocaleTimeString()}` : ''}
           </p>
         </div>
         <div className="flex gap-2">
