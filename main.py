@@ -60,14 +60,14 @@ app = FastAPI(
         "TonerTrack is a shared board for office printers.\n\n"
         "**In plain language:** your team sees which printers are online, low on toner, "
         "or need a check. A small program on one office computer updates the board. "
-        "It only looks at printers you add — it does not scan your whole network.\n\n"
+        "It only looks at printers you add. It does not scan your whole network.\n\n"
         "### Who this is for\n"
         "- Office IT or facilities staff\n"
         "- Teams that share printers and want fewer surprise outages\n\n"
         "### Main ideas\n"
-        "- **Board** — the website list of printers\n"
-        "- **Office helper** — the small program on a PC inside the office\n"
-        "- **Access key** — a secret code so only your office helper can send updates\n"
+        "- **Board**: the website list of printers\n"
+        "- **Office helper**: the small program on a PC inside the office\n"
+        "- **Access key**: a secret code so only your office helper can send updates\n"
     ),
     openapi_tags=[
         {"name": "printers", "description": "Add, update, and list printers on the shared board."},
@@ -134,7 +134,7 @@ def trust_info():
             "Alert events (e.g. low toner)",
         ],
         kill_switch=(
-            "Revoke the on-site agent token or uninstall the agent — probing stops. "
+            "Revoke the on-site helper access key or uninstall the helper. Probing stops. "
             "You can also stay on Manual only and never install an agent."
         ),
         modes=[
