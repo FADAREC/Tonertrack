@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { Printer, Plus, RefreshCw, Trash2, Check, Activity, AlertTriangle, HelpCircle } from 'lucide-react';
 import { printersAPI, agentAPI } from '../services/api';
 import { Link } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 interface PrinterRow {
   id: number;
@@ -133,6 +134,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
     try {
       await printersAPI.update(id, { toner_level: n });
       setEditingId(null);
+      toast.success('Toner updated');
       await load();
     } catch (e: any) {
       setError(e?.response?.data?.detail || 'Update failed');
@@ -146,6 +148,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
     setBusyId(id);
     try {
       await printersAPI.delete(id);
+      toast.success('Printer removed');
       await load();
     } catch (e: any) {
       setError(e?.response?.data?.detail || 'Delete failed');
