@@ -279,10 +279,15 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                 <div className="min-w-0">
                   <p className="font-medium text-zinc-100 truncate">{p.name}</p>
                   <p className="text-xs text-zinc-500 truncate">
-                    {[p.location, p.department, p.ip_address].filter(Boolean).join(' · ') || 'No IP / location'}
-                    {p.connection_mode && p.connection_mode !== 'manual'
-                      ? ` · ${p.connection_mode.toUpperCase()}`
-                      : ''}
+                    {[p.location, p.department].filter(Boolean).join(' · ') || 'No location'}
+                    {p.ip_address ? (
+                      <>
+                        {' · '}
+                        <span className="tt-mono text-zinc-400">{p.ip_address}</span>
+                      </>
+                    ) : (
+                      <span className="text-zinc-600"> · No IP</span>
+                    )}
                   </p>
                   <p className={`text-xs mt-1 ${p.stale ? 'text-amber-400/90' : 'text-zinc-500'}`}>
                     {ageText(p)}
