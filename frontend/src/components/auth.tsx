@@ -34,7 +34,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
   const [loading, setLoading] = useState(false);
 
   const inputCls =
-    'w-full pl-10 p-3 rounded-xl border bg-white/5 border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-blue-400/50';
+    'w-full pl-10 p-3 rounded-xl border bg-white/5 border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[rgba(57,255,136,0.35)]';
 
   const finishLogin = (accessToken: string, role?: string) => {
     localStorage.setItem('token', accessToken);
@@ -104,7 +104,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-sm font-bold">T</div>
+        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#39ff88] text-[#0b132b] text-sm font-bold">T</div>
         <h1 className="text-xl font-semibold tracking-tight text-zinc-50">TonerTrack</h1>
         <p className="text-sm text-zinc-500">Shared printer board for your office</p>
       </div>
@@ -191,7 +191,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white p-3 rounded-xl font-medium transition"
+        className="w-full bg-[#39ff88] hover:brightness-110 text-[#0b132b] disabled:opacity-50 text-white p-3 rounded-xl font-medium transition"
       >
         <ArrowRight className="inline h-5 w-5 mr-2" />
         {loading ? (isRegister ? 'Creating…' : 'Signing in…') : isRegister ? 'Create account' : 'Sign in'}

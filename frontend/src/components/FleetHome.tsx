@@ -32,13 +32,13 @@ function statusLabel(p: PrinterRow): { text: string; color: string; bg: string }
     return { text: 'Unknown', color: 'text-zinc-300', bg: 'bg-zinc-500/15' };
   }
   if (p.status === 'low' || (p.toner_level != null && p.toner_level <= 20)) {
-    return { text: 'Low toner', color: 'text-amber-300', bg: 'bg-amber-500/15' };
+    return { text: 'Low toner', color: 'text-[#ffb14a]', bg: 'bg-[rgba(255,177,74,0.12)]' };
   }
   if (p.status === 'offline') {
     return { text: 'Offline', color: 'text-red-300', bg: 'bg-red-500/15' };
   }
   if (p.status === 'online' || p.status === 'ok') {
-    return { text: 'Online', color: 'text-emerald-300', bg: 'bg-emerald-500/15' };
+    return { text: 'Online', color: 'text-[#39ff88]', bg: 'bg-[rgba(57,255,136,0.12)]' };
   }
   return { text: 'Unknown', color: 'text-zinc-300', bg: 'bg-zinc-500/15' };
 }
@@ -167,9 +167,9 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
     <div className="max-w-5xl mx-auto space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 mb-1">Fleet</p>
-          <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">Printer board</h1>
-          <p className="text-sm text-zinc-500 mt-1">
+          <p className="text-xs uppercase tracking-[0.14em] text-[#f0f4ff]0 mb-1">Fleet</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#f0f4ff]">Printer board</h1>
+          <p className="text-sm text-[#f0f4ff]0 mt-1">
             Live status from your office helper · only printers you list
             {pollLabel ? ` · polls every ${pollLabel}` : ''}
             {lastRefresh ? ` · board refreshed ${lastRefresh.toLocaleTimeString()}` : ''}
@@ -190,15 +190,24 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: 'Total', value: printers.length, icon: Printer },
-          { label: 'Online', value: online, icon: Activity },
-          { label: 'Low toner', value: lowCount, icon: AlertTriangle },
-          { label: 'Need check', value: staleCount, icon: HelpCircle },
-        ].map(({ label, value, icon: Icon }) => (
-          <div key={label} className="tt-card px-4 py-3">
+          { label: 'Total', value: printers.length, icon: Printer, hot: false },
+          { label: 'Online', value: online, icon: Activity, hot: online > 0 },
+          { label: 'Low toner', value: lowCount, icon: AlertTriangle, hot: lowCount > 0 },
+          { label: 'Need check', value: staleCount, icon: HelpCircle, hot: staleCount > 0 },
+        ].map(({ label, value, icon: Icon, hot }) => (
+          <div
+            key={label}
+            className={`tt-card px-4 py-3 ${
+              label === 'Low toner' && hot
+                ? 'tt-card-attention'
+                : label === 'Online' && hot
+                  ? 'tt-card-live'
+                  : ''
+            }`}
+          >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs text-zinc-500">{label}</span>
-              <Icon className="h-3.5 w-3.5 text-zinc-600" />
+              <span className="text-xs text-[#8b9bb8]">{label}</span>
+              <Icon className="h-3.5 w-3.5 text-[#8b9bb8]/80" />
             </div>
             <p className="text-2xl font-semibold tabular-nums tracking-tight">{loading ? '—' : value}</p>
           </div>
@@ -209,8 +218,8 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
         <div className="tt-card p-4">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <div>
-              <p className="text-sm font-medium text-zinc-100">Helper poll frequency</p>
-              <p className="text-xs text-zinc-500 mt-0.5">
+              <p className="text-sm font-medium text-[#f0f4ff]">Helper poll frequency</p>
+              <p className="text-xs text-[#f0f4ff]0 mt-0.5">
                 How often the PC inside the office checks listed printers and updates this board.
               </p>
             </div>
@@ -224,7 +233,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                 onClick={() => savePollInterval(s)}
                 className={`px-3 py-1.5 rounded-lg text-xs border transition ${
                   pollSeconds === s
-                    ? 'bg-blue-600 text-white border-blue-600'
+                    ? 'bg-[#39ff88] text-[#0b132b] border-[#39ff88]'
                     : 'border-white/10 text-zinc-300 hover:bg-white/5'
                 }`}
               >
@@ -258,9 +267,9 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
 
       {!loading && printers.length === 0 && (
         <div className="tt-card px-8 py-14 text-center">
-          <Printer className="h-10 w-10 mx-auto mb-4 text-zinc-600" />
-          <p className="text-lg font-medium text-zinc-100 mb-1">No printers yet</p>
-          <p className="text-sm text-zinc-500 max-w-sm mx-auto mb-6">
+          <Printer className="h-10 w-10 mx-auto mb-4 text-[#5c6b86]" />
+          <p className="text-lg font-medium text-[#f0f4ff] mb-1">No printers yet</p>
+          <p className="text-sm text-[#f0f4ff]0 max-w-sm mx-auto mb-6">
             Add devices your team uses. The office helper will poll only these IPs — nothing else on the network.
           </p>
           <div className="flex flex-wrap justify-center gap-2">
@@ -281,26 +290,32 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
           return (
             <div
               key={p.id}
-              className="tt-card px-4 py-3.5 flex flex-wrap items-center gap-4 hover:border-white/12 transition-colors"
+              className={`tt-card px-4 py-3.5 flex flex-wrap items-center gap-4 transition-colors ${
+                (!p.stale && (p.status === 'low' || (p.toner_level != null && p.toner_level <= 20)))
+                  ? 'tt-card-attention'
+                  : (!p.stale && (p.status === 'online' || p.status === 'ok'))
+                    ? 'tt-card-live'
+                    : ''
+              }`}
             >
               <div className="flex items-start gap-3 min-w-0 flex-1">
                 <div className="h-9 w-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-                  <Printer className="h-4 w-4 text-zinc-400" />
+                  <Printer className="h-4 w-4 text-[#8b9bb8]" />
                 </div>
                 <div className="min-w-0">
-                  <p className="font-medium text-zinc-100 truncate">{p.name}</p>
-                  <p className="text-xs text-zinc-500 truncate">
+                  <p className="font-medium text-[#f0f4ff] truncate">{p.name}</p>
+                  <p className="text-xs text-[#f0f4ff]0 truncate">
                     {[p.location, p.department].filter(Boolean).join(' · ') || 'No location'}
                     {p.ip_address ? (
                       <>
                         {' · '}
-                        <span className="tt-mono text-zinc-400">{p.ip_address}</span>
+                        <span className="tt-mono text-[#8b9bb8]">{p.ip_address}</span>
                       </>
                     ) : (
-                      <span className="text-zinc-600"> · No IP</span>
+                      <span className="text-[#5c6b86]"> · No IP</span>
                     )}
                   </p>
-                  <p className={`text-xs mt-1 ${p.stale ? 'text-amber-400/90' : 'text-zinc-500'}`}>
+                  <p className={`text-xs mt-1 ${p.stale ? 'text-amber-400/90' : 'text-[#f0f4ff]0'}`}>
                     {ageText(p)}
                     {p.status_detail && p.status_detail !== 'probe_skipped_cloud_disabled'
                       ? ` · ${p.status_detail.replace(/_/g, ' ')}`
@@ -362,7 +377,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                   type="button"
                   disabled={busyId === p.id}
                   onClick={() => remove(p.id, p.name)}
-                  className="p-1.5 rounded-lg text-zinc-500 hover:text-red-400 hover:bg-red-500/10"
+                  className="p-1.5 rounded-lg text-[#f0f4ff]0 hover:text-red-400 hover:bg-red-500/10"
                   title="Remove"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -374,7 +389,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
       </div>
 
       {printers.length > 0 && printers.length < 5 && (
-        <p className="text-xs text-zinc-600 text-center">Free plan · {printers.length}/5 printers</p>
+        <p className="text-xs text-[#5c6b86] text-center">Free plan · {printers.length}/5 printers</p>
       )}
     </div>
   );

@@ -12,7 +12,9 @@ import { Toaster } from 'react-hot-toast';
 
 function App() {
   const [darkMode, setDarkMode] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth >= 768 : true
+  );
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('token'));
   const [trustReady, setTrustReady] = useState<boolean | null>(null);
 
@@ -51,7 +53,7 @@ function App() {
 
   if (!token) {
     return (
-      <div className={`min-h-screen flex items-center justify-center bg-[#0a0a0b] text-zinc-100`}>
+      <div className={`min-h-screen flex items-center justify-center tt-app-shell text-[#f0f4ff]`}>
         <div className="w-full max-w-md p-6">
           <Auth
             darkMode={darkMode}
@@ -64,7 +66,7 @@ function App() {
 
   if (trustReady === null) {
     return (
-      <div className={`min-h-screen flex items-center justify-center bg-[#0a0a0b] text-zinc-100`}>
+      <div className={`min-h-screen flex items-center justify-center tt-app-shell text-[#f0f4ff]`}>
         <p className="opacity-60">Loading…</p>
       </div>
     );
@@ -76,18 +78,18 @@ function App() {
 
   return (
     <Router>
-      <div className={`min-h-screen bg-[#0a0a0b] text-zinc-100`}>
+      <div className={`min-h-screen tt-app-shell text-[#f0f4ff]`}>
         <Toaster
           position="bottom-center"
           toastOptions={{
-            style: { background: '#1a1a1e', color: '#f4f4f5', border: '1px solid rgba(255,255,255,0.08)' },
+            style: { background: '#111a33', color: '#f0f4ff', border: '1px solid rgba(57,255,136,0.15)' },
           }}
         />
         <div className="flex h-screen overflow-hidden">
           <Sidebar darkMode={darkMode} isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-          <div className={`flex-1 flex flex-col overflow-hidden transition-all ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
             <TopNav darkMode={darkMode} toggleDarkMode={toggleDarkMode} toggleSidebar={toggleSidebar} />
-            <main className="flex-1 overflow-y-auto p-6 sm:p-8">
+            <main className="flex-1 overflow-y-auto px-4 py-5 sm:p-8">
               <Routes>
                 <Route path="/" element={<FleetHome darkMode={darkMode} />} />
                 <Route path="/add-printer" element={<AddPrinterSimple darkMode={darkMode} />} />
