@@ -220,6 +220,38 @@ def list_users(db: Session = Depends(get_db), current_user: UserInDB = Depends(g
     return [{"username": u.username, "email": u.email, "role": getattr(u, "role", "operator")} for u in users]
 
 
+
+
+def record_site_visit(path: str = "/") -> None:
+    """Best-effort page view to DB. Never breaks the response."""
+    try:
+        from database import SessionLocal
+        db = SessionLocal()
+        try:
+            db.add(models.SiteVisit(path=(path or "/")[:200]))
+            db.commit()
+        finally:
+            db.close()
+    except Exception:
+        pass
+
+
+@app.get("/stats/visits")
+def visit_stats(db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
+    """Admin: how many site page-loads we have recorded."""
+    if getattr(current_user, "role", None) != "admin":
+        raise HTTPException(status_code=403, detail="Admin only")
+    from sqlalchemy import func as sa_func
+    total = db.query(sa_func.count(models.SiteVisit.id)).scalar() or 0
+    today = (
+        db.query(sa_func.count(models.SiteVisit.id))
+        .filter(models.SiteVisit.created_at >= sa_func.date(sa_func.now()))
+        .scalar()
+        or 0
+    )
+    return {"total_page_views": int(total), "page_views_today": int(today)}
+
+
 # Serve React build when present (single-URL hosting on Render)
 STATIC_DIR = Path(__file__).resolve().parent / "frontend" / "build"
 if STATIC_DIR.is_dir():
@@ -239,10 +271,15 @@ if STATIC_DIR.is_dir():
         "me",
         "refresh",
         "logout",
+        "agent",
+        "stats",
+        "login",
+        "register",
     }
 
     @app.get("/")
     async def spa_root():
+        record_site_visit("/")
         index = STATIC_DIR / "index.html"
         if index.is_file():
             return FileResponse(index)
@@ -253,6 +290,10 @@ if STATIC_DIR.is_dir():
         first = full_path.split("/")[0]
         if first in _API_ROOTS or full_path == "openapi.json":
             raise HTTPException(status_code=404, detail="Not found")
+        # skip static-like noise
+        if first in {"static", "favicon.ico", "manifest.json", "asset-manifest.json"}:
+            raise HTTPException(status_code=404, detail="Not found")
+        record_site_visit("/" + full_path)
         index = STATIC_DIR / "index.html"
         if index.is_file():
             return FileResponse(index)

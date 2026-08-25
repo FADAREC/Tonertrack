@@ -130,3 +130,12 @@ class AuditEvent(Base):
     detail = Column(String, default="")
     created_at = Column(DateTime, default=func.now())
 
+
+class SiteVisit(Base):
+    """Lightweight page-view log for pilot traffic (not /health uptime pings)."""
+    __tablename__ = "site_visits"
+
+    id = Column(Integer, primary_key=True, index=True)
+    path = Column(String, default="/", index=True)
+    created_at = Column(DateTime, default=func.now(), index=True)
+
