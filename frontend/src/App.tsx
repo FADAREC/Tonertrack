@@ -87,7 +87,7 @@ function App() {
           <Sidebar darkMode={darkMode} isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
           <div className={`flex-1 flex flex-col overflow-hidden transition-all ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
             <TopNav darkMode={darkMode} toggleDarkMode={toggleDarkMode} toggleSidebar={toggleSidebar} />
-            <main className="flex-1 overflow-y-auto p-6">
+            <main className="flex-1 overflow-y-auto p-6 sm:p-8">
               <Routes>
                 <Route path="/" element={<FleetHome darkMode={darkMode} />} />
                 <Route path="/add-printer" element={<AddPrinterSimple darkMode={darkMode} />} />
