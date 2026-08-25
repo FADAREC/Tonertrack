@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Download, Key, Shield, Copy, Check, RefreshCw } from 'lucide-react';
 import { agentAPI } from '../services/api';
+import toast from 'react-hot-toast';
 
 type TokenRow = {
   id: number;
@@ -87,6 +88,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
     if (!rawOnce) return;
     await navigator.clipboard.writeText(rawOnce);
     setCopied(true);
+    toast.success('Token copied');
     setTimeout(() => setCopied(false), 1500);
   };
 
