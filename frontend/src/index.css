@@ -115,3 +115,12 @@ body {
   font-size: 0.8em;
   letter-spacing: -0.01em;
 }
+
+:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.7);
+  outline-offset: 2px;
+}
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) {
+  outline: none;
+}
