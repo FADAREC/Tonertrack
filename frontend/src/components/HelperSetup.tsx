@@ -97,7 +97,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.14em] text-[#8b9bb8] mb-1">Office helper</p>
+        <p className="text-xs text-[#8b9bb8] mb-1">Office helper</p>
         <h1 className="text-2xl font-semibold tracking-tight">Set up the office computer</h1>
         <p className="text-sm text-[#8b9bb8] mt-1">
           Install a small program on one computer in the office. It checks only the printers you added
@@ -107,7 +107,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
 
       <ol className="tt-card divide-y divide-white/5">
         {[
-          'Create an access key (admin only). Copy it immediately — you will not see it again.',
+          'Create an access key (admin only). Copy it immediately. You will not see it again.',
           'Turn on download for that key so the helper file can be fetched.',
           'On one office computer, download the helper and paste your access key when asked.',
           'Run the helper. On the Printer board, choose how often it should check.',
@@ -130,7 +130,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
 
       {rawOnce && (
         <div className="tt-card p-4 border-amber-500/30">
-          <p className="text-xs text-amber-200/90 mb-2 font-medium">Save this key now — it will not be shown again</p>
+          <p className="text-xs text-amber-200/90 mb-2 font-medium">Save this key now. It will not be shown again.</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-xs break-all bg-black/40 rounded-lg px-3 py-2 text-zinc-200">{rawOnce}</code>
             <button type="button" onClick={copyRaw} className="tt-btn tt-btn-ghost shrink-0">
@@ -152,7 +152,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       <div className="space-y-2">
         {loading && <p className="text-sm text-zinc-500">Loading tokens…</p>}
         {!loading && tokens.length === 0 && (
-          <p className="text-sm text-zinc-500">No access keys yet. Create one to unlock the helper.</p>
+          <p className="text-sm text-zinc-500">No access keys yet. Create one so you can download the helper.</p>
         )}
         {tokens.map((t) => (
           <div key={t.id} className="tt-card px-4 py-3 flex flex-wrap items-center justify-between gap-3">

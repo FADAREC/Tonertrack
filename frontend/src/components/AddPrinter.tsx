@@ -82,7 +82,7 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
         type="submit"
         whileHover={{ scale: 1.02 }}
         disabled={loading}
-        className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white p-3 rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50"
+        className="w-full bg-[#39ff88] text-[#0b132b] p-3 rounded-xl font-medium disabled:opacity-50"
       >
         <Plus className="inline h-5 w-5 mr-2" />
         {loading ? 'Adding...' : 'Add Printer'}

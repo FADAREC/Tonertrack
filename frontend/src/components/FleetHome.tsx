@@ -134,7 +134,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
   const saveToner = async (id: number) => {
     const n = parseInt(tonerDraft, 10);
     if (Number.isNaN(n) || n < 0 || n > 100) {
-      setError('Toner must be 0–100');
+      setError('Toner must be 0-100');
       return;
     }
     setBusyId(id);
@@ -175,7 +175,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
     <div className="max-w-5xl mx-auto space-y-5 sm:space-y-6 pb-24 md:pb-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.14em] text-[#8b9bb8] mb-1">Fleet</p>
+          <p className="text-xs text-[#8b9bb8] mb-1">Fleet</p>
           <h1 className="text-2xl font-semibold tracking-tight text-[#f2f5ff]">Printer board</h1>
           <p className="text-sm text-[#8b9bb8] mt-1">
             Shared view for your team · only printers you add
@@ -200,10 +200,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
       {!loading && (lowCount > 0 || staleCount > 0) && (
         <div
           className="tt-card px-4 py-3 flex flex-wrap items-center gap-3"
-          style={{
-            borderColor: lowCount > 0 ? 'rgba(255,46,58,0.4)' : 'rgba(255,177,74,0.35)',
-            boxShadow: lowCount > 0 ? '0 0 28px rgba(255,46,58,0.1)' : '0 0 24px rgba(255,177,74,0.08)',
-          }}
+          style={{ borderColor: lowCount > 0 ? 'rgba(255,46,58,0.45)' : 'rgba(255,177,74,0.4)' }}
           role="status"
         >
           <span
@@ -242,7 +239,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
               <span className="text-xs text-[#8b9bb8]">{label}</span>
               <Icon className="h-3.5 w-3.5 text-[#8b9bb8]" />
             </div>
-            <p className="text-2xl font-semibold tabular-nums tracking-tight">{loading ? '—' : value}</p>
+            <p className="text-2xl font-semibold tabular-nums tracking-tight">{loading ? '…' : value}</p>
           </div>
         ))}
       </div>
@@ -399,7 +396,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                         }}
                         className="text-xs tabular-nums text-[#f2f5ff] hover:text-white"
                       >
-                        {p.toner_level != null ? `${p.toner_level}%` : '—'}
+                        {p.toner_level != null ? `${p.toner_level}%` : 'n/a'}
                       </button>
                     )}
                   </div>
@@ -423,13 +420,13 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
               {open && (
                 <div className="px-4 pb-4 border-t border-white/5 grid gap-3 sm:grid-cols-2 text-xs text-[#8b9bb8]">
                   <div className="space-y-1 pt-3">
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-[#5c6b86]">Detail</p>
+                    <p className="text-[10px] text-[#5c6b86]">Detail</p>
                     <p>Mode · {p.connection_mode || 'manual'}</p>
-                    <p>Status detail · {p.status_detail ? p.status_detail.replace(/_/g, ' ') : '—'}</p>
+                    <p>Status detail · {p.status_detail ? p.status_detail.replace(/_/g, ' ') : 'n/a'}</p>
                     <p>Fail streak · {p.fail_streak ?? 0}</p>
                   </div>
                   <div className="space-y-1 pt-3">
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-[#5c6b86]">Trust</p>
+                    <p className="text-[10px] text-[#5c6b86]">Trust</p>
                     <p>{ageText(p)}</p>
                     <p className="tt-mono text-[#f2f5ff]/90">{p.ip_address || 'No IP for helper'}</p>
                     <p>{[p.department, p.location].filter(Boolean).join(' · ') || 'No place tags'}</p>

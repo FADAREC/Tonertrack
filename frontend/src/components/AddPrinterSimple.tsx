@@ -46,7 +46,7 @@ const AddPrinterSimple: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
 
   return (
     <div className="max-w-lg mx-auto">
-      <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 mb-1">Fleet</p>
+      <p className="text-xs text-zinc-500 mb-1">Fleet</p>
       <h1 className="text-2xl font-semibold tracking-tight mb-2">Add printer</h1>
       <p className="text-sm mb-6 text-zinc-500">
         Add a printer to the shared board. Include its network address so the office computer can check it automatically.
@@ -69,7 +69,7 @@ const AddPrinterSimple: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
           <input className="tt-input" value={ip} onChange={(e) => setIp(e.target.value)} placeholder="e.g. 192.168.1.50" />
         </div>
         <div>
-          <label className="text-sm text-zinc-500">Toner level % (optional — filled in automatically when checking works)</label>
+          <label className="text-sm text-zinc-500">Toner level % (optional; filled in automatically when checking works)</label>
           <input
             className="tt-input"
             type="number"

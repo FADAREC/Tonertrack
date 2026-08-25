@@ -45,10 +45,7 @@ body {
 
 /* Depth: layered atmosphere (Apple) without competing with content (deference) */
 .tt-app-shell {
-  background:
-    radial-gradient(80rem 40rem at 0% -10%, rgba(122, 53, 255, 0.1), transparent 50%),
-    radial-gradient(50rem 30rem at 100% 0%, rgba(57, 255, 136, 0.06), transparent 45%),
-    var(--tt-bg);
+  background: var(--tt-bg);
   min-height: 100%;
 }
 
@@ -61,10 +58,7 @@ body {
 
 /* Structural color — live state: ambient, zero "notification chrome" */
 .tt-card-live {
-  border-color: rgba(57, 255, 136, 0.28);
-  box-shadow:
-    inset 0 1px 0 rgba(57, 255, 136, 0.08),
-    0 0 24px rgba(57, 255, 136, 0.06);
+  border-color: rgba(57, 255, 136, 0.22);
 }
 
 /* Aposematism — low toner / danger: high contrast, read in one glance */
@@ -73,7 +67,6 @@ body {
   background:
     linear-gradient(90deg, rgba(255, 46, 58, 0.14) 0, rgba(255, 46, 58, 0.14) 4px, transparent 4px),
     var(--tt-surface);
-  box-shadow: 0 0 28px rgba(255, 46, 58, 0.08);
 }
 
 .tt-card-stale {
@@ -103,10 +96,9 @@ body {
 .tt-btn-primary {
   background: var(--tt-live);
   color: #0b132b;
-  box-shadow: 0 0 0 1px rgba(57, 255, 136, 0.25), 0 10px 30px rgba(57, 255, 136, 0.16);
 }
 .tt-btn-primary:hover:not(:disabled) {
-  box-shadow: 0 0 0 1px rgba(57, 255, 136, 0.4), 0 12px 36px rgba(57, 255, 136, 0.26);
+  filter: brightness(1.05);
 }
 
 .tt-btn-ghost {
@@ -150,12 +142,10 @@ body {
 }
 .tt-status-dot-online {
   background: var(--tt-live);
-  box-shadow: 0 0 10px var(--tt-live-glow);
   animation: tt-firefly 2.6s ease-out infinite;
 }
 .tt-status-dot-danger {
   background: var(--tt-danger);
-  box-shadow: 0 0 10px rgba(255, 46, 58, 0.55);
 }
 
 @keyframes tt-firefly {

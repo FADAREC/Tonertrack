@@ -20,7 +20,7 @@ const Sidebar: React.FC<{
         <div className="flex items-center gap-2.5">
           <div
             className="h-8 w-8 rounded-xl flex items-center justify-center text-xs font-bold text-[#0b132b]"
-            style={{ background: '#39ff88', boxShadow: '0 0 20px rgba(57,255,136,0.35)' }}
+            style={{ background: '#39ff88' }}
           >
             T
           </div>

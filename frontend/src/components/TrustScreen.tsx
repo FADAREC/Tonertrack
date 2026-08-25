@@ -55,7 +55,7 @@ const TrustScreen: React.FC<{ onDone: () => void; darkMode: boolean }> = ({ onDo
         </div>
 
         <section className="mb-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-green-500 mb-2 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-green-500 mb-2 flex items-center gap-2">
             <CheckCircle className="h-4 w-4" /> What we access
           </h2>
           <ul className="space-y-1 text-sm opacity-90 list-disc pl-5">
@@ -66,7 +66,7 @@ const TrustScreen: React.FC<{ onDone: () => void; darkMode: boolean }> = ({ onDo
         </section>
 
         <section className="mb-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-red-400 mb-2 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-red-400 mb-2 flex items-center gap-2">
             <XCircle className="h-4 w-4" /> What we never access
           </h2>
           <ul className="space-y-1 text-sm opacity-90 list-disc pl-5">
@@ -77,7 +77,7 @@ const TrustScreen: React.FC<{ onDone: () => void; darkMode: boolean }> = ({ onDo
         </section>
 
         <section className="mb-5">
-          <h2 className="text-sm font-semibold uppercase tracking-wide opacity-60 mb-2">What leaves your network</h2>
+          <h2 className="text-sm font-semibold opacity-60 mb-2">What leaves your network</h2>
           <ul className="space-y-1 text-sm opacity-90 list-disc pl-5">
             {info.what_leaves_network.map((t) => (
               <li key={t}>{t}</li>
@@ -104,7 +104,7 @@ const TrustScreen: React.FC<{ onDone: () => void; darkMode: boolean }> = ({ onDo
             onClick={() => choose('agent_accepted')}
             className="w-full py-3 rounded-xl border border-gray-500 hover:bg-white/5 font-medium transition disabled:opacity-50"
           >
-            I understand — on-site agent later
+            I understand. On-site helper later
           </button>
           <p className="text-xs opacity-60 text-center">
             Manual only never contacts your network. You can change this later in Settings.

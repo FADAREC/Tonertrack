@@ -106,7 +106,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
       <div className="text-center space-y-2">
         <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#39ff88] text-[#0b132b] text-sm font-bold">T</div>
         <h1 className="text-xl font-semibold tracking-tight text-zinc-50">TonerTrack</h1>
-        <p className="text-sm text-zinc-500">See all your office printers in one place</p>
+        <p className="text-sm text-zinc-500">Office printer status in one place</p>
       </div>
     <form onSubmit={handleSubmit} className="space-y-5 bg-[#121214] rounded-2xl p-8 border border-white/10">
       <div className="text-center">
