@@ -8,6 +8,7 @@ import HelperSetup from './components/HelperSetup';
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';
 import { trustAPI } from './services/api';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   const [darkMode, setDarkMode] = useState(true);
@@ -76,6 +77,12 @@ function App() {
   return (
     <Router>
       <div className={`min-h-screen bg-[#0a0a0b] text-zinc-100`}>
+        <Toaster
+          position="bottom-center"
+          toastOptions={{
+            style: { background: '#1a1a1e', color: '#f4f4f5', border: '1px solid rgba(255,255,255,0.08)' },
+          }}
+        />
         <div className="flex h-screen overflow-hidden">
           <Sidebar darkMode={darkMode} isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
           <div className={`flex-1 flex flex-col overflow-hidden transition-all ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
