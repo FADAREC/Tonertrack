@@ -2,23 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+  Biomimicry-first tokens (with Apple clarity + Google scan density)
+  - Structural color: status glows from light, not loud fills
+  - Aposematism: danger is high-contrast and impossible to miss
+  - Fibonacci rhythm: 1,1,2,3,5,8,13,21…
+*/
 :root {
-  /* Prompt Blue + AI Green system */
-  --tt-bg: #0b132b;
-  --tt-bg-deep: #070d1c;
+  --tt-bg: #070d1c;
+  --tt-bg-elevated: #0b132b;
   --tt-surface: #111a33;
   --tt-surface-2: #162040;
-  --tt-border: rgba(255, 255, 255, 0.08);
-  --tt-text: #f0f4ff;
+  --tt-border: rgba(255, 255, 255, 0.07);
+  --tt-text: #f2f5ff;
   --tt-muted: #8b9bb8;
-  --tt-accent: #39ff88;
-  --tt-accent-dim: rgba(57, 255, 136, 0.14);
-  --tt-accent-glow: rgba(57, 255, 136, 0.35);
+  --tt-live: #39ff88;
+  --tt-live-glow: rgba(57, 255, 136, 0.4);
+  --tt-danger: #ff2e3a;
+  --tt-danger-soft: #ffb14a;
   --tt-violet: #7a35ff;
-  --tt-violet-dim: rgba(122, 53, 255, 0.18);
-  --tt-warn: #ffb14a;
-  --tt-bad: #ff5c6a;
-  --tt-radius: 16px;
+  --tt-radius: 13px; /* ~fib-ish */
+
+  --space-1: 0.25rem;  /* 4 */
+  --space-2: 0.5rem;   /* 8 */
+  --space-3: 0.75rem;  /* 12 */
+  --space-5: 1.25rem;  /* 20 */
+  --space-8: 2rem;     /* 32 */
+  --space-13: 3.25rem; /* 52 */
+
   --tt-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
 }
 
@@ -28,34 +39,46 @@ body {
   margin: 0;
   font-family: var(--tt-font);
   -webkit-font-smoothing: antialiased;
-  background: var(--tt-bg-deep);
+  background: var(--tt-bg);
   color: var(--tt-text);
 }
 
-/* Soft radial lights — guide attention, not decorate everything */
+/* Depth: layered atmosphere (Apple) without competing with content (deference) */
 .tt-app-shell {
   background:
-    radial-gradient(900px 500px at 10% -10%, rgba(122, 53, 255, 0.12), transparent 55%),
-    radial-gradient(700px 420px at 100% 0%, rgba(57, 255, 136, 0.08), transparent 50%),
-    var(--tt-bg-deep);
+    radial-gradient(80rem 40rem at 0% -10%, rgba(122, 53, 255, 0.1), transparent 50%),
+    radial-gradient(50rem 30rem at 100% 0%, rgba(57, 255, 136, 0.06), transparent 45%),
+    var(--tt-bg);
   min-height: 100%;
 }
 
 .tt-card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 40%), var(--tt-surface);
+  background: var(--tt-surface);
   border: 1px solid var(--tt-border);
   border-radius: var(--tt-radius);
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.2);
+  transition: border-color 0.2s ease, box-shadow 0.25s ease;
 }
 
-.tt-card-attention {
-  border-color: rgba(255, 177, 74, 0.35);
-  box-shadow: 0 0 24px rgba(255, 177, 74, 0.08);
-}
-
+/* Structural color — live state: ambient, zero "notification chrome" */
 .tt-card-live {
-  border-color: rgba(57, 255, 136, 0.22);
-  box-shadow: 0 0 20px rgba(57, 255, 136, 0.06);
+  border-color: rgba(57, 255, 136, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(57, 255, 136, 0.08),
+    0 0 24px rgba(57, 255, 136, 0.06);
+}
+
+/* Aposematism — low toner / danger: high contrast, read in one glance */
+.tt-card-attention {
+  border-color: rgba(255, 46, 58, 0.45);
+  background:
+    linear-gradient(90deg, rgba(255, 46, 58, 0.14) 0, rgba(255, 46, 58, 0.14) 4px, transparent 4px),
+    var(--tt-surface);
+  box-shadow: 0 0 28px rgba(255, 46, 58, 0.08);
+}
+
+.tt-card-stale {
+  border-color: rgba(139, 155, 184, 0.25);
+  opacity: 0.92;
 }
 
 .tt-muted { color: var(--tt-muted); }
@@ -64,11 +87,12 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
+  gap: var(--space-2);
   border-radius: 12px;
   font-size: 0.875rem;
-  font-weight: 560;
-  padding: 0.6rem 1rem;
+  font-weight: 600;
+  padding: 0.7rem 1.1rem;
+  min-height: 44px; /* touch affordance */
   transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.15s ease, opacity 0.15s;
   position: relative;
   overflow: hidden;
@@ -77,12 +101,12 @@ body {
 .tt-btn:active:not(:disabled) { transform: scale(0.97); }
 
 .tt-btn-primary {
-  background: var(--tt-accent);
+  background: var(--tt-live);
   color: #0b132b;
-  box-shadow: 0 0 0 1px rgba(57, 255, 136, 0.3), 0 8px 28px rgba(57, 255, 136, 0.18);
+  box-shadow: 0 0 0 1px rgba(57, 255, 136, 0.25), 0 10px 30px rgba(57, 255, 136, 0.16);
 }
 .tt-btn-primary:hover:not(:disabled) {
-  box-shadow: 0 0 0 1px rgba(57, 255, 136, 0.45), 0 10px 36px rgba(57, 255, 136, 0.28);
+  box-shadow: 0 0 0 1px rgba(57, 255, 136, 0.4), 0 12px 36px rgba(57, 255, 136, 0.26);
 }
 
 .tt-btn-ghost {
@@ -96,10 +120,11 @@ body {
   width: 100%;
   border-radius: 12px;
   border: 1px solid var(--tt-border);
-  background: rgba(7, 13, 28, 0.6);
+  background: rgba(7, 13, 28, 0.65);
   color: var(--tt-text);
-  padding: 0.75rem 0.9rem;
-  font-size: 0.95rem;
+  padding: 0.8rem 0.95rem;
+  font-size: 1rem; /* mobile readability */
+  min-height: 48px;
 }
 .tt-input:focus {
   outline: none;
@@ -112,15 +137,36 @@ body {
   border-radius: 999px;
   background: rgba(255,255,255,0.08);
   overflow: hidden;
-  width: 72px;
+  width: 4.5rem;
 }
 .tt-toner-fill { height: 100%; border-radius: 999px; transition: width 0.35s ease; }
+
+/* Firefly sync — soft coordinated pulse for healthy devices */
+.tt-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.tt-status-dot-online {
+  background: var(--tt-live);
+  box-shadow: 0 0 10px var(--tt-live-glow);
+  animation: tt-firefly 2.6s ease-out infinite;
+}
+.tt-status-dot-danger {
+  background: var(--tt-danger);
+  box-shadow: 0 0 10px rgba(255, 46, 58, 0.55);
+}
+
+@keyframes tt-firefly {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(57, 255, 136, 0.45); }
+  50% { opacity: 0.85; box-shadow: 0 0 0 7px rgba(57, 255, 136, 0); }
+}
 
 ::selection {
   background: rgba(57, 255, 136, 0.28);
   color: #fff;
 }
-
 :focus-visible {
   outline: 2px solid rgba(57, 255, 136, 0.65);
   outline-offset: 2px;
@@ -145,53 +191,44 @@ a:focus:not(:focus-visible) { outline: none; }
   letter-spacing: -0.01em;
 }
 
-.tt-status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  display: inline-block;
+/* Samsung-inspired thumb zone bar */
+.tt-thumb-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 30;
+  padding: var(--space-3) var(--space-3) calc(var(--space-3) + env(safe-area-inset-bottom));
+  background: linear-gradient(180deg, transparent, rgba(7, 13, 28, 0.92) 28%, rgba(7, 13, 28, 0.98));
+  display: flex;
+  gap: var(--space-2);
+  justify-content: stretch;
 }
-.tt-status-dot-online {
-  background: #39ff88;
-  box-shadow: 0 0 8px rgba(57, 255, 136, 0.6);
-  animation: tt-pulse 2.4s ease-out infinite;
-}
-@keyframes tt-pulse {
-  0% { box-shadow: 0 0 0 0 rgba(57, 255, 136, 0.5); }
-  70% { box-shadow: 0 0 0 8px rgba(57, 255, 136, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(57, 255, 136, 0); }
-}
+.tt-thumb-bar .tt-btn { flex: 1; }
 
-/* Mobile drawer */
 .tt-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(5, 8, 18, 0.65);
-  backdrop-filter: blur(6px);
+  background: rgba(5, 8, 18, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   z-index: 40;
 }
 .tt-drawer {
   position: fixed;
   inset: 0 auto 0 0;
-  width: min(18rem, 86vw);
+  width: min(18rem, 88vw);
   z-index: 50;
-  background: var(--tt-bg);
+  background: rgba(11, 19, 43, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border-right: 1px solid var(--tt-border);
   transform: translateX(-105%);
-  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
 }
 .tt-drawer-open { transform: translateX(0); }
 
 @media (min-width: 768px) {
-  .tt-drawer {
-    position: relative;
-    transform: none;
-    width: 16rem;
-    z-index: 10;
-  }
-  .tt-drawer-closed-desktop {
-    display: none;
-  }
+  .tt-drawer { display: none; }
+  .tt-thumb-bar { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {

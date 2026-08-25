@@ -290,12 +290,14 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
           return (
             <div
               key={p.id}
-              className={`tt-card px-4 py-3.5 flex flex-wrap items-center gap-4 transition-colors ${
+              className={`tt-card px-4 py-3.5 sm:py-4 flex flex-wrap items-center gap-3 sm:gap-4 transition-colors ${
                 (!p.stale && (p.status === 'low' || (p.toner_level != null && p.toner_level <= 20)))
                   ? 'tt-card-attention'
-                  : (!p.stale && (p.status === 'online' || p.status === 'ok'))
-                    ? 'tt-card-live'
-                    : ''
+                  : (p.stale || p.status === 'unknown')
+                    ? 'tt-card-stale'
+                    : (!p.stale && (p.status === 'online' || p.status === 'ok'))
+                      ? 'tt-card-live'
+                      : ''
               }`}
             >
               <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -328,6 +330,9 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                 <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 ${st.bg} ${st.color}`}>
                   {(p.status === 'online' || p.status === 'ok') && !p.stale && (
                     <span className="tt-status-dot tt-status-dot-online" aria-hidden />
+                  )}
+                  {(!p.stale && (p.status === 'low' || (p.toner_level != null && p.toner_level <= 20))) && (
+                    <span className="tt-status-dot tt-status-dot-danger" aria-hidden />
                   )}
                   {st.text}
                 </span>
@@ -391,6 +396,10 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
       {printers.length > 0 && printers.length < 5 && (
         <p className="text-xs text-[#5c6b86] text-center">Free plan · {printers.length}/5 printers</p>
       )}
+      <div className="tt-thumb-bar md:hidden">
+        <Link to="/helper" className="tt-btn tt-btn-ghost">Helper</Link>
+        <Link to="/add-printer" className="tt-btn tt-btn-primary">Add printer</Link>
+      </div>
     </div>
   );
 };

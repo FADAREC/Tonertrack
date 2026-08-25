@@ -83,7 +83,7 @@ const Sidebar: React.FC<{
       </aside>
       {/* Desktop rail */}
       <aside
-        className={`hidden md:flex flex-col w-64 shrink-0 border-r border-white/5 bg-[var(--tt-bg)] ${
+        className={`hidden md:flex flex-col w-64 shrink-0 border-r border-white/5 bg-[rgba(11,19,43,0.9)] backdrop-blur-xl ${
           isOpen ? '' : 'md:hidden'
         }`}
       >
