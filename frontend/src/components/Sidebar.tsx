@@ -1,73 +1,56 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import { LayoutDashboard, Printer, Settings, LogOut, ChevronLeft, ChevronRight, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
+import { LayoutGrid, PlusCircle, Activity, LogOut, ChevronLeft } from 'lucide-react';
 
-const Sidebar: React.FC<{ darkMode: boolean; isOpen: boolean; toggleSidebar: () => void; role?: string }> = ({ darkMode, isOpen, toggleSidebar, role }) => {
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-    { icon: Printer, label: 'Printers', path: '/printers' },
-    { icon: Settings, label: 'Settings', path: '/settings' },
-  ];
+const Sidebar: React.FC<{
+  darkMode: boolean;
+  isOpen: boolean;
+  toggleSidebar: () => void;
+}> = ({ isOpen, toggleSidebar }) => {
+  const linkCls = ({ isActive }: { isActive: boolean }) =>
+    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition ${
+      isActive ? 'bg-white/10 text-white' : 'text-zinc-400 hover:text-zinc-100 hover:bg-white/5'
+    }`;
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    window.location.reload();
-  };
+  if (!isOpen) return null;
 
   return (
-    <motion.aside
-      animate={{ x: isOpen ? 0 : -300 }}
-      transition={{ duration: 0.3 }}
-      className="w-64 bg-white/5 backdrop-blur-lg shadow-2xl rounded-r-3xl p-6 flex flex-col justify-between border-r border-white/10 fixed h-screen z-50"
-    >
-      <div>
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            PrintHub
-          </h1>
-          <button onClick={toggleSidebar} className="text-white/70 hover:text-white">
-            {isOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-          </button>
+    <aside className="fixed inset-y-0 left-0 z-30 w-64 border-r border-white/5 bg-[#0a0a0b] flex flex-col">
+      <div className="h-14 px-4 flex items-center justify-between border-b border-white/5">
+        <div className="flex items-center gap-2">
+          <div className="h-7 w-7 rounded-lg bg-blue-600 flex items-center justify-center text-xs font-bold">T</div>
+          <span className="font-semibold tracking-tight">TonerTrack</span>
         </div>
-        <nav className="space-y-2">
-          {menuItems.map((item, index) => (
-            <motion.div
-              key={item.label}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Link
-                to={item.path}
-                className="flex items-center p-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
-              >
-                <item.icon className="h-5 w-5 mr-3" />
-                {item.label}
-              </Link>
-            </motion.div>
-          ))}
-          {role === 'admin' && ( // Show add for admin only
-            <Link
-              to="/add-printer"
-              className="flex items-center p-3 rounded-xl text-white/70 hover:text-white hover:bg-white/10 transition-all duration-300"
-            >
-              <Plus className="h-5 w-5 mr-3" />
-              Add Printer
-            </Link>
-          )}
-        </nav>
+        <button type="button" onClick={toggleSidebar} className="p-1.5 rounded-lg text-zinc-500 hover:bg-white/5">
+          <ChevronLeft className="h-4 w-4" />
+        </button>
       </div>
-      <motion.button
-        onClick={handleLogout}
-        whileHover={{ scale: 1.02 }}
-        className="flex items-center p-3 rounded-xl text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all duration-300"
-      >
-        <LogOut className="h-5 w-5 mr-3" />
-        Logout
-      </motion.button>
-    </motion.aside>
+      <nav className="flex-1 p-3 space-y-1">
+        <NavLink to="/" end className={linkCls}>
+          <LayoutGrid className="h-4 w-4" /> Fleet
+        </NavLink>
+        <NavLink to="/add-printer" className={linkCls}>
+          <PlusCircle className="h-4 w-4" /> Add printer
+        </NavLink>
+        <NavLink to="/helper" className={linkCls}>
+          <Activity className="h-4 w-4" /> Office helper
+        </NavLink>
+      </nav>
+      <div className="p-3 border-t border-white/5">
+        <button
+          type="button"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-zinc-400 hover:text-zinc-100 hover:bg-white/5 w-full"
+          onClick={() => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('role');
+            localStorage.removeItem('trust_mode');
+            window.location.href = '/';
+          }}
+        >
+          <LogOut className="h-4 w-4" /> Sign out
+        </button>
+      </div>
+    </aside>
   );
 };
 

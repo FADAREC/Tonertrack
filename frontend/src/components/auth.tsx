@@ -102,11 +102,17 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 bg-white/5 backdrop-blur-lg rounded-3xl p-8 border border-white/10 shadow-2xl">
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-sm font-bold">T</div>
+        <h1 className="text-xl font-semibold tracking-tight text-zinc-50">TonerTrack</h1>
+        <p className="text-sm text-zinc-500">Shared printer board for your office</p>
+      </div>
+    <form onSubmit={handleSubmit} className="space-y-5 bg-[#121214] rounded-2xl p-8 border border-white/10">
       <div className="text-center">
-        <h2 className="text-2xl font-bold text-white mb-1">{isRegister ? 'Create account' : 'Sign in'}</h2>
-        <p className="text-white/60 text-sm">
-          {isRegister ? 'First account becomes admin for this workspace.' : 'Use your username and password.'}
+        <h2 className="text-lg font-semibold text-white mb-1">{isRegister ? 'Create account' : 'Sign in'}</h2>
+        <p className="text-zinc-500 text-sm">
+          {isRegister ? 'First account becomes admin for this office.' : 'Username and password.'}
         </p>
       </div>
 
@@ -191,10 +197,11 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
         {loading ? 'Please wait…' : isRegister ? 'Create account' : 'Sign in'}
       </button>
 
-      <button type="button" onClick={switchMode} className="w-full text-white/70 hover:text-white text-sm">
+      <button type="button" onClick={switchMode} className="w-full text-zinc-500 hover:text-zinc-200 text-sm">
         {isRegister ? 'Already have an account? Sign in' : "Don't have an account? Create one"}
       </button>
     </form>
+    </div>
   );
 };
 

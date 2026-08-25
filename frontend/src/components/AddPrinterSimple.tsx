@@ -46,31 +46,32 @@ const AddPrinterSimple: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
 
   return (
     <div className="max-w-lg mx-auto">
-      <h1 className="text-2xl font-semibold mb-2">Add printer</h1>
-      <p className={`text-sm mb-6 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-        Manual entry — nothing on your network is contacted.
+      <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 mb-1">Fleet</p>
+      <h1 className="text-2xl font-semibold tracking-tight mb-2">Add printer</h1>
+      <p className="text-sm mb-6 text-zinc-500">
+        Add a device to the board. Include the LAN IP so the office helper can poll it automatically.
       </p>
-      <form onSubmit={submit} className={`rounded-2xl border p-6 space-y-4 ${panel}`}>
+      <form onSubmit={submit} className="tt-card p-6 space-y-4">
         <div>
-          <label className="text-sm opacity-70">Name *</label>
-          <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Front desk HP" required />
+          <label className="text-sm text-zinc-500">Name *</label>
+          <input className="tt-input" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Front desk HP" required />
         </div>
         <div>
-          <label className="text-sm opacity-70">Location</label>
-          <input className={inputCls} value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Ground floor" />
+          <label className="text-sm text-zinc-500">Location</label>
+          <input className="tt-input" value={location} onChange={(e) => setLocation(e.target.value)} placeholder="e.g. Ground floor" />
         </div>
         <div>
-          <label className="text-sm opacity-70">Department</label>
-          <input className={inputCls} value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Accounts" />
+          <label className="text-sm text-zinc-500">Department</label>
+          <input className="tt-input" value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Accounts" />
         </div>
         <div>
-          <label className="text-sm opacity-70">IP address (optional)</label>
-          <input className={inputCls} value={ip} onChange={(e) => setIp(e.target.value)} placeholder="For your records only in manual mode" />
+          <label className="text-sm text-zinc-500">LAN IP (needed for helper polling)</label>
+          <input className="tt-input" value={ip} onChange={(e) => setIp(e.target.value)} placeholder="e.g. 192.168.1.50" />
         </div>
         <div>
-          <label className="text-sm opacity-70">Toner level % (optional)</label>
+          <label className="text-sm text-zinc-500">Toner % (optional — helper will fill this when polling works)</label>
           <input
-            className={inputCls}
+            className="tt-input"
             type="number"
             min={0}
             max={100}

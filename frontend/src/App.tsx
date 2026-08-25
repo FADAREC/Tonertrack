@@ -4,6 +4,7 @@ import Auth from './components/auth';
 import TrustScreen from './components/TrustScreen';
 import FleetHome from './components/FleetHome';
 import AddPrinterSimple from './components/AddPrinterSimple';
+import HelperSetup from './components/HelperSetup';
 import Sidebar from './components/Sidebar';
 import TopNav from './components/TopNav';
 import { trustAPI } from './services/api';
@@ -49,7 +50,7 @@ function App() {
 
   if (!token) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900 text-white' : 'bg-slate-100 text-gray-900'}`}>
+      <div className={`min-h-screen flex items-center justify-center bg-[#0a0a0b] text-zinc-100`}>
         <div className="w-full max-w-md p-6">
           <Auth
             darkMode={darkMode}
@@ -62,7 +63,7 @@ function App() {
 
   if (trustReady === null) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${darkMode ? 'bg-gray-900 text-white' : 'bg-slate-50'}`}>
+      <div className={`min-h-screen flex items-center justify-center bg-[#0a0a0b] text-zinc-100`}>
         <p className="opacity-60">Loading…</p>
       </div>
     );
@@ -74,7 +75,7 @@ function App() {
 
   return (
     <Router>
-      <div className={`min-h-screen ${darkMode ? 'dark bg-gray-900 text-white' : 'bg-slate-50 text-gray-900'}`}>
+      <div className={`min-h-screen bg-[#0a0a0b] text-zinc-100`}>
         <div className="flex h-screen overflow-hidden">
           <Sidebar darkMode={darkMode} isOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
           <div className={`flex-1 flex flex-col overflow-hidden transition-all ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
@@ -83,6 +84,7 @@ function App() {
               <Routes>
                 <Route path="/" element={<FleetHome darkMode={darkMode} />} />
                 <Route path="/add-printer" element={<AddPrinterSimple darkMode={darkMode} />} />
+                <Route path="/helper" element={<HelperSetup darkMode={darkMode} />} />
                 <Route path="/printers" element={<Navigate to="/" replace />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>

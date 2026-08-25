@@ -1,6 +1,5 @@
 import axios from 'axios';
 
-// Same origin when FE is served by API; override with REACT_APP_API_URL if split
 const API_URL = process.env.REACT_APP_API_URL || '';
 
 const api = axios.create({
@@ -46,6 +45,20 @@ export const printersAPI = {
   update: (id: number, data: Record<string, unknown>) => api.patch(`/printers/${id}`, data),
   get: (id: number) => api.get(`/printers/${id}`),
   delete: (id: number) => api.delete(`/printers/${id}`),
+};
+
+export const agentAPI = {
+  listTokens: () => api.get('/agent/tokens'),
+  createToken: (name = 'default') => api.post('/agent/tokens', { name }),
+  revokeToken: (id: number) => api.post(`/agent/tokens/${id}/revoke`),
+  enableHelperDownload: (id: number) => api.post(`/agent/tokens/${id}/enable-helper-download`),
+  getPollConfig: () => api.get('/agent/poll-config'),
+  setPollConfig: (poll_interval_seconds: number) =>
+    api.put('/agent/poll-config', { poll_interval_seconds }),
+};
+
+export const statsAPI = {
+  visits: () => api.get('/stats/visits'),
 };
 
 export default api;
