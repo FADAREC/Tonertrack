@@ -263,9 +263,14 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
           <p className="text-sm text-zinc-500 max-w-sm mx-auto mb-6">
             Add devices your team uses. The office helper will poll only these IPs — nothing else on the network.
           </p>
-          <Link to="/add-printer" className="tt-btn tt-btn-primary">
-            <Plus className="h-4 w-4" /> Add first printer
-          </Link>
+          <div className="flex flex-wrap justify-center gap-2">
+            <Link to="/add-printer" className="tt-btn tt-btn-primary">
+              <Plus className="h-4 w-4" /> Add first printer
+            </Link>
+            <Link to="/helper" className="tt-btn tt-btn-ghost">
+              Set up office helper
+            </Link>
+          </div>
         </div>
       )}
 
