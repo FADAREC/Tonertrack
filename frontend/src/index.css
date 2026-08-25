@@ -124,3 +124,22 @@ button:focus:not(:focus-visible),
 a:focus:not(:focus-visible) {
   outline: none;
 }
+
+.tt-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  display: inline-block;
+}
+.tt-status-dot-online {
+  background: #34d399;
+  animation: tt-pulse 2.4s ease-out infinite;
+}
+@keyframes tt-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.45); }
+  70% { box-shadow: 0 0 0 8px rgba(52, 211, 153, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(52, 211, 153, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tt-status-dot-online { animation: none; }
+}

@@ -310,7 +310,10 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full ${st.bg} ${st.color}`}>
+                <span className={`text-[11px] font-medium px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 ${st.bg} ${st.color}`}>
+                  {(p.status === 'online' || p.status === 'ok') && !p.stale && (
+                    <span className="tt-status-dot tt-status-dot-online" aria-hidden />
+                  )}
                   {st.text}
                 </span>
 
