@@ -103,6 +103,21 @@ class AgentToken(Base):
     last_used_at = Column(DateTime, nullable=True)
     revoked_at = Column(DateTime, nullable=True)
     revoked_by = Column(String, nullable=True)
+    # Admin must enable before helper package can be downloaded with this token
+    helper_download_enabled = Column(Boolean, default=False, nullable=False)
+
+
+class HelperDownloadLog(Base):
+    """Track every helper download attempt (success or denied)."""
+    __tablename__ = "helper_download_logs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    token_id = Column(Integer, ForeignKey("agent_tokens.id"), nullable=True)
+    token_prefix = Column(String, default="")
+    actor = Column(String, default="")  # username if admin-triggered, or "agent_token"
+    success = Column(Boolean, default=False)
+    detail = Column(String, default="")
+    created_at = Column(DateTime, default=func.now())
 
 
 class AuditEvent(Base):
