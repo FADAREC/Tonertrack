@@ -85,3 +85,33 @@ body {
   border-radius: 999px;
   transition: width 0.3s ease;
 }
+
+::selection {
+  background: rgba(59, 130, 246, 0.35);
+  color: #fafafa;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.tt-skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: tt-shimmer 1.2s ease-in-out infinite;
+  border-radius: 8px;
+}
+@keyframes tt-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.tt-mono {
+  font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.8em;
+  letter-spacing: -0.01em;
+}
