@@ -159,6 +159,7 @@ class AgentTokenPublic(BaseModel):
     created_at: Optional[str] = None
     last_used_at: Optional[str] = None
     revoked_at: Optional[str] = None
+    helper_download_enabled: bool = False
 
     class Config:
         from_attributes = True
@@ -169,3 +170,20 @@ class AgentTokenCreated(BaseModel):
     token: AgentTokenPublic
     raw_token: str
     warning: str = "Store this token now. It will not be shown again."
+
+
+class PollIntervalUpdate(BaseModel):
+    poll_interval_seconds: int
+
+
+class PollConfigResponse(BaseModel):
+    poll_interval_seconds: int
+    allowed_intervals_seconds: list[int]
+    label: str
+
+
+class AgentPrinterTarget(BaseModel):
+    id: int
+    name: str
+    ip_address: Optional[str] = None
+    connection_mode: str = "manual"
