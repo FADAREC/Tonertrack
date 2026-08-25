@@ -78,6 +78,15 @@ def health(db: Session = Depends(get_db)):
     try:
         from sqlalchemy import text
         db.execute(text("SELECT 1"))
+        # Record uptime/bot pings so we can see probe activity in DB
+        try:
+            db.add(models.SiteVisit(path="/health"))
+            db.commit()
+        except Exception:
+            try:
+                db.rollback()
+            except Exception:
+                pass
         return {"status": "ok", "database": "ok"}
     except Exception as e:
         return {"status": "degraded", "database": str(e)}
@@ -238,18 +247,30 @@ def record_site_visit(path: str = "/") -> None:
 
 @app.get("/stats/visits")
 def visit_stats(db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
-    """Admin: how many site page-loads we have recorded."""
+    """Admin: page-loads vs /health uptime pings."""
     if getattr(current_user, "role", None) != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     from sqlalchemy import func as sa_func
     total = db.query(sa_func.count(models.SiteVisit.id)).scalar() or 0
+    health = (
+        db.query(sa_func.count(models.SiteVisit.id))
+        .filter(models.SiteVisit.path == "/health")
+        .scalar()
+        or 0
+    )
+    pages = int(total) - int(health)
     today = (
         db.query(sa_func.count(models.SiteVisit.id))
         .filter(models.SiteVisit.created_at >= sa_func.date(sa_func.now()))
         .scalar()
         or 0
     )
-    return {"total_page_views": int(total), "page_views_today": int(today)}
+    return {
+        "total_events": int(total),
+        "page_views": pages,
+        "health_pings": int(health),
+        "events_today": int(today),
+    }
 
 
 # Serve React build when present (single-URL hosting on Render)
