@@ -235,7 +235,20 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
         </p>
       )}
 
-      {loading && <p className="text-sm text-zinc-500">Loading fleet…</p>}
+      {loading && (
+        <div className="space-y-2" aria-hidden>
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="tt-card px-4 py-4 flex gap-3 items-center">
+              <div className="tt-skeleton h-9 w-9 rounded-lg" />
+              <div className="flex-1 space-y-2">
+                <div className="tt-skeleton h-3.5 w-40" />
+                <div className="tt-skeleton h-2.5 w-56" />
+              </div>
+              <div className="tt-skeleton h-6 w-16 rounded-full" />
+            </div>
+          ))}
+        </div>
+      )}
 
       {!loading && printers.length === 0 && (
         <div className="tt-card px-8 py-14 text-center">
