@@ -43,15 +43,15 @@ const TrustScreen: React.FC<{ onDone: () => void; darkMode: boolean }> = ({ onDo
   }
 
   const card = darkMode
-    ? 'bg-gray-800/90 border border-gray-700 text-white'
+    ? 'bg-[#121214]/90 border border-gray-700 text-white'
     : 'bg-white border border-gray-200 text-gray-900 shadow-lg';
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-4 ${darkMode ? 'bg-gray-900' : 'bg-slate-50'}`}>
+    <div className={`min-h-screen flex items-center justify-center p-4 ${darkMode ? 'bg-[#0a0a0b]' : 'bg-slate-50'}`}>
       <div className={`max-w-xl w-full rounded-2xl p-8 ${card}`}>
         <div className="flex items-center gap-3 mb-6">
           <Shield className="h-8 w-8 text-blue-500" />
-          <h1 className="text-2xl font-semibold">{info.title}</h1>
+          <h1 className="text-2xl tracking-tight font-semibold">{info.title}</h1>
         </div>
 
         <section className="mb-5">
