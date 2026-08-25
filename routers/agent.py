@@ -36,7 +36,7 @@ from pathlib import Path as FsPath
 from routers.printers import _serialize
 import models
 
-router = APIRouter(prefix="/agent", tags=["agent"])
+router = APIRouter(prefix="/agent", tags=["agent"])  # Office helper
 
 
 def _require_admin(user: UserInDB) -> None:
@@ -93,7 +93,7 @@ def get_agent_from_header(
     return row
 
 
-@router.post("/tokens", response_model=AgentTokenCreated)
+@router.post("/tokens", response_model=AgentTokenCreated, summary="Create an office helper access key")
 def issue_token(
     body: AgentTokenCreate,
     db: Session = Depends(get_db),
@@ -130,7 +130,7 @@ def revoke_token(
     return _public_token(row)
 
 
-@router.post("/report")
+@router.post("/report", summary="Send a printer status update from the office helper")
 def agent_report(
     body: AgentReportRequest,
     db: Session = Depends(get_db),
@@ -158,7 +158,7 @@ def agent_report(
     return _serialize(updated)
 
 
-@router.get("/config")
+@router.get("/config", summary="How often the office helper should check printers")
 def agent_config(
     db: Session = Depends(get_db),
     agent: models.AgentToken = Depends(get_agent_from_header),
@@ -173,7 +173,7 @@ def agent_config(
     }
 
 
-@router.get("/fleet")
+@router.get("/fleet", summary="List of printers the office helper may check")
 def agent_fleet(
     db: Session = Depends(get_db),
     agent: models.AgentToken = Depends(get_agent_from_header),
@@ -194,7 +194,7 @@ def agent_fleet(
     return {"printers": targets, "count": len(targets)}
 
 
-@router.get("/poll-config", response_model=PollConfigResponse)
+@router.get("/poll-config", response_model=PollConfigResponse, summary="See check frequency (website)")
 def get_poll_config_admin(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
@@ -208,7 +208,7 @@ def get_poll_config_admin(
     }
 
 
-@router.put("/poll-config", response_model=PollConfigResponse)
+@router.put("/poll-config", response_model=PollConfigResponse, summary="Change how often the helper checks")
 def set_poll_config_admin(
     body: PollIntervalUpdate,
     db: Session = Depends(get_db),
@@ -234,7 +234,7 @@ def set_poll_config_admin(
     }
 
 
-@router.post("/tokens/{token_id}/enable-helper-download")
+@router.post("/tokens/{token_id}/enable-helper-download", summary="Allow download of the office helper")
 def enable_helper_download(
     token_id: int,
     db: Session = Depends(get_db),
@@ -260,7 +260,7 @@ def enable_helper_download(
     return _public_token(row)
 
 
-@router.get("/helper/download")
+@router.get("/helper/download", summary="Download the office helper program")
 def download_helper(
     db: Session = Depends(get_db),
     agent: models.AgentToken = Depends(get_agent_from_header),

@@ -53,7 +53,28 @@ except Exception as _mig_err:
     import logging
     logging.getLogger("uvicorn.error").warning("Alembic upgrade skipped: %s", _mig_err)
 
-app = FastAPI(title="TonerTrack", version="1.0.0")
+app = FastAPI(
+    title="TonerTrack",
+    version="1.0.0",
+    description=(
+        "TonerTrack is a shared board for office printers.\n\n"
+        "**In plain language:** your team sees which printers are online, low on toner, "
+        "or need a check. A small program on one office computer updates the board. "
+        "It only looks at printers you add — it does not scan your whole network.\n\n"
+        "### Who this is for\n"
+        "- Office IT or facilities staff\n"
+        "- Teams that share printers and want fewer surprise outages\n\n"
+        "### Main ideas\n"
+        "- **Board** — the website list of printers\n"
+        "- **Office helper** — the small program on a PC inside the office\n"
+        "- **Access key** — a secret code so only your office helper can send updates\n"
+    ),
+    openapi_tags=[
+        {"name": "printers", "description": "Add, update, and list printers on the shared board."},
+        {"name": "agent", "description": "Office helper: access keys, poll settings, and status reports from the office PC."},
+        {"name": "default", "description": "Sign-in, trust choices, health, and account helpers."},
+    ],
+)
 
 _cors = os.getenv(
     "CORS_ORIGINS",
@@ -73,7 +94,7 @@ app.include_router(printers_router)
 app.include_router(agent_router)
 
 
-@app.get("/health")
+@app.get("/health", summary="Is the service up?")
 def health(db: Session = Depends(get_db)):
     try:
         from sqlalchemy import text
@@ -96,16 +117,16 @@ def health(db: Session = Depends(get_db)):
 def trust_info():
     """Shown before any network monitoring path. Clear and refusable."""
     return TrustInfo(
-        title="How TonerTrack uses your network",
+        title="How TonerTrack works with your office network",
         what_we_access=[
-            "Only printer IP addresses you explicitly add",
-            "Only status signals those printers expose (toner, online/offline, page count when available)",
+            "Only the printers you choose to add (by name and address)",
+            "Only simple status: online or not, and toner level when the printer shares it",
         ],
         what_we_never_access=[
             "The rest of your network (no subnet scan)",
-            "File shares, email, or user PCs",
-            "Active Directory or other directory services",
-            "Any device you did not add as a printer",
+            "Email, files, or personal computers",
+            "Staff login systems or employee directories",
+            "Anything you did not add as a printer",
         ],
         what_leaves_network=[
             "Account details you create in this app",
@@ -245,7 +266,7 @@ def record_site_visit(path: str = "/") -> None:
         pass
 
 
-@app.get("/stats/visits")
+@app.get("/stats/visits", summary="How many people opened the site?")
 def visit_stats(db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
     """Admin: page-loads vs /health uptime pings."""
     if getattr(current_user, "role", None) != "admin":

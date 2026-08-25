@@ -46,15 +46,15 @@ function statusLabel(p: PrinterRow): { text: string; color: string; bg: string }
 function ageText(p: PrinterRow): string {
   if (p.status_note) return p.status_note;
   if (p.days_since_update == null && !p.last_checked && !p.last_verified_at) {
-    return 'Never verified — no poll yet';
+    return 'Not checked yet';
   }
   const d = p.days_since_update;
-  if (d == null) return 'Status verified';
-  if (d < 1 / 1440) return 'Last good read just now';
-  if (d < 1 / 24) return `Last good read ${Math.max(1, Math.round(d * 1440))} min ago`;
-  if (d < 1) return `Last good read ${Math.round(d * 24)}h ago`;
-  if (d < 2) return 'Last good read 1 day ago';
-  return `Last good read ${Math.round(d)} days ago`;
+  if (d == null) return 'Checked';
+  if (d < 1 / 1440) return 'Checked just now';
+  if (d < 1 / 24) return `Checked ${Math.max(1, Math.round(d * 1440))} min ago`;
+  if (d < 1) return `Checked ${Math.round(d * 24)}h ago`;
+  if (d < 2) return 'Checked 1 day ago';
+  return `Checked ${Math.round(d)} days ago`;
 }
 
 function tonerColor(level: number | null): string {
@@ -178,7 +178,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
           <p className="text-xs uppercase tracking-[0.14em] text-[#8b9bb8] mb-1">Fleet</p>
           <h1 className="text-2xl font-semibold tracking-tight text-[#f2f5ff]">Printer board</h1>
           <p className="text-sm text-[#8b9bb8] mt-1">
-            Live status from your office helper · only printers you list
+            Shared view for your team · only printers you add
             {pollLabel ? ` · polls every ${pollLabel}` : ''}
             {lastRefresh ? ` · refreshed ${lastRefresh.toLocaleTimeString()}` : ''}
           </p>
@@ -219,7 +219,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                   : `${staleCount} printer${staleCount === 1 ? '' : 's'} need a fresh check`}
             </p>
             <p className="text-xs text-[#8b9bb8] mt-0.5">
-              Only appears when something needs a human — a healthy fleet stays quiet.
+              This bar only shows when something needs attention. If everything is fine, it stays hidden.
             </p>
           </div>
         </div>
@@ -230,7 +230,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
           { label: 'Total', value: printers.length, icon: Printer, kind: 'plain' as const },
           { label: 'Online', value: online, icon: Activity, kind: online > 0 ? 'live' : 'plain' },
           { label: 'Low toner', value: lowCount, icon: AlertTriangle, kind: lowCount > 0 ? 'danger' : 'plain' },
-          { label: 'Need check', value: staleCount, icon: HelpCircle, kind: staleCount > 0 ? 'warn' : 'plain' },
+          { label: 'Needs check', value: staleCount, icon: HelpCircle, kind: staleCount > 0 ? 'warn' : 'plain' },
         ].map(({ label, value, icon: Icon, kind }) => (
           <div
             key={label}
@@ -249,9 +249,9 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
 
       {allowedIntervals.length > 0 && (
         <div className="tt-card p-4">
-          <p className="text-sm font-medium text-[#f2f5ff]">Helper poll frequency</p>
+          <p className="text-sm font-medium text-[#f2f5ff]">How often to check printers</p>
           <p className="text-xs text-[#8b9bb8] mt-0.5 mb-3">
-            How often the PC inside the office checks listed printers.
+            How often the office computer should check the printers you added.
           </p>
           <div className="flex flex-wrap gap-2">
             {allowedIntervals.map((s) => (
@@ -296,14 +296,14 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
           <Printer className="h-10 w-10 mx-auto mb-4 text-[#5c6b86]" />
           <p className="text-lg font-medium text-[#f2f5ff] mb-1">No printers yet</p>
           <p className="text-sm text-[#8b9bb8] max-w-sm mx-auto mb-6">
-            Add devices your team uses. The office helper only polls IPs you list.
+            Add the printers your team uses. The office program only checks the ones you add.
           </p>
           <div className="flex flex-wrap justify-center gap-2">
             <Link to="/add-printer" className="tt-btn tt-btn-primary">
               <Plus className="h-4 w-4" /> Add first printer
             </Link>
             <Link to="/helper" className="tt-btn tt-btn-ghost">
-              Set up office helper
+              Set up office computer
             </Link>
           </div>
         </div>

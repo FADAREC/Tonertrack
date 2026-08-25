@@ -49,7 +49,7 @@ const AddPrinterSimple: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
       <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 mb-1">Fleet</p>
       <h1 className="text-2xl font-semibold tracking-tight mb-2">Add printer</h1>
       <p className="text-sm mb-6 text-zinc-500">
-        Add a device to the board. Include the LAN IP so the office helper can poll it automatically.
+        Add a printer to the shared board. Include its network address so the office computer can check it automatically.
       </p>
       <form onSubmit={submit} className="tt-card p-6 space-y-4">
         <div>
@@ -65,11 +65,11 @@ const AddPrinterSimple: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
           <input className="tt-input" value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Accounts" />
         </div>
         <div>
-          <label className="text-sm text-zinc-500">LAN IP (needed for helper polling)</label>
+          <label className="text-sm text-zinc-500">Network address (so the office computer can find it)</label>
           <input className="tt-input" value={ip} onChange={(e) => setIp(e.target.value)} placeholder="e.g. 192.168.1.50" />
         </div>
         <div>
-          <label className="text-sm text-zinc-500">Toner % (optional — helper will fill this when polling works)</label>
+          <label className="text-sm text-zinc-500">Toner level % (optional — filled in automatically when checking works)</label>
           <input
             className="tt-input"
             type="number"

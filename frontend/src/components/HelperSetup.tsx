@@ -30,7 +30,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       const res = await agentAPI.listTokens();
       setTokens(res.data || []);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || 'Admin only — sign in as admin to manage the helper.');
+      setError(e?.response?.data?.detail || 'Only an admin can manage this. Sign in with an admin account.');
     } finally {
       setLoading(false);
     }
@@ -88,7 +88,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
     if (!rawOnce) return;
     await navigator.clipboard.writeText(rawOnce);
     setCopied(true);
-    toast.success('Token copied');
+    toast.success('Access key copied');
     setTimeout(() => setCopied(false), 1500);
   };
 
@@ -97,20 +97,20 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <header>
-        <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 mb-1">Office helper</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Install on a LAN PC</h1>
-        <p className="text-sm text-zinc-500 mt-1">
-          The helper runs inside your network, checks only printers you listed, and updates the shared board.
-          We never scan your subnet from the cloud.
+        <p className="text-xs uppercase tracking-[0.14em] text-[#8b9bb8] mb-1">Office helper</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Set up the office computer</h1>
+        <p className="text-sm text-[#8b9bb8] mt-1">
+          Install a small program on one computer in the office. It checks only the printers you added
+          and updates the shared board. It does not look at the rest of your network.
         </p>
       </header>
 
       <ol className="tt-card divide-y divide-white/5">
         {[
-          'Create an agent token (admin). Copy it once — it will not be shown again.',
-          'Enable helper download for that token.',
-          'On an office Windows PC, download the helper and set the token as an environment variable.',
-          'Run the helper. Set poll frequency on the Fleet page.',
+          'Create an access key (admin only). Copy it immediately — you will not see it again.',
+          'Turn on download for that key so the helper file can be fetched.',
+          'On one office computer, download the helper and paste your access key when asked.',
+          'Run the helper. On the Printer board, choose how often it should check.',
         ].map((step, i) => (
           <li key={step} className="px-4 py-3 flex gap-3 text-sm text-zinc-300">
             <span className="text-zinc-500 font-medium tabular-nums w-5">{i + 1}.</span>
@@ -130,7 +130,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
 
       {rawOnce && (
         <div className="tt-card p-4 border-amber-500/30">
-          <p className="text-xs text-amber-200/90 mb-2 font-medium">Show-once token — store securely</p>
+          <p className="text-xs text-amber-200/90 mb-2 font-medium">Save this key now — it will not be shown again</p>
           <div className="flex items-center gap-2">
             <code className="flex-1 text-xs break-all bg-black/40 rounded-lg px-3 py-2 text-zinc-200">{rawOnce}</code>
             <button type="button" onClick={copyRaw} className="tt-btn tt-btn-ghost shrink-0">
@@ -142,7 +142,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
 
       <div className="flex flex-wrap gap-2">
         <button type="button" disabled={busy} onClick={createToken} className="tt-btn tt-btn-primary">
-          <Key className="h-4 w-4" /> Create token
+          <Key className="h-4 w-4" /> Create access key
         </button>
         <button type="button" onClick={load} className="tt-btn tt-btn-ghost">
           <RefreshCw className="h-4 w-4" /> Refresh
@@ -152,7 +152,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       <div className="space-y-2">
         {loading && <p className="text-sm text-zinc-500">Loading tokens…</p>}
         {!loading && tokens.length === 0 && (
-          <p className="text-sm text-zinc-500">No tokens yet. Create one to unlock the helper.</p>
+          <p className="text-sm text-zinc-500">No access keys yet. Create one to unlock the helper.</p>
         )}
         {tokens.map((t) => (
           <div key={t.id} className="tt-card px-4 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -179,7 +179,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
                   onClick={() => enableDownload(t.id)}
                   className="tt-btn tt-btn-ghost text-xs"
                 >
-                  <Download className="h-3.5 w-3.5" /> Enable download
+                  <Download className="h-3.5 w-3.5" /> Allow download
                 </button>
               )}
               {!t.revoked_at && (
@@ -198,7 +198,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       </div>
 
       <div className="tt-card p-4">
-        <p className="text-sm font-medium text-zinc-100 mb-2">On the office PC</p>
+        <p className="text-sm font-medium text-zinc-100 mb-2">On the office computer</p>
         <pre className="text-[11px] leading-relaxed text-zinc-400 bg-black/40 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap">{`curl -H "X-Agent-Token: tt_YOUR_TOKEN" -o tonertrack_helper.py ${base}/agent/helper/download
 set TONERTRACK_URL=${base}
 set TONERTRACK_AGENT_TOKEN=tt_YOUR_TOKEN
