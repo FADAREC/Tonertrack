@@ -21,11 +21,16 @@ from sqlalchemy import update
 
 import models
 
-# Pilot knobs
 STALE_AFTER_DAYS = 7
 FAIL_STREAK_THRESHOLD = 3
 FAIL_WINDOW = timedelta(minutes=15)
 LOW_TONER_THRESHOLD = 20
+
+ALLOWED_STATUS_DETAILS = frozenset({
+    "unreachable",
+    "device_reported",
+    "probe_skipped_cloud_disabled",
+})
 
 
 def _utcnow() -> datetime:
@@ -43,7 +48,9 @@ def _days_since(dt: Optional[datetime]) -> Optional[float]:
         return None
 
 
-def normalize_toner_status(toner_level: Optional[int], status: Optional[str] = None) -> tuple[Optional[int], Optional[str]]:
+def normalize_toner_status(
+    toner_level: Optional[int], status: Optional[str] = None
+) -> tuple[Optional[int], Optional[str]]:
     if toner_level is not None:
         toner_level = int(toner_level)
         if toner_level < 0 or toner_level > 100:
@@ -56,6 +63,37 @@ def normalize_toner_status(toner_level: Optional[int], status: Optional[str] = N
     return None, status
 
 
+def record_status_check(
+    db: Session,
+    printer_id: int,
+    *,
+    source: str,
+    ok: bool | None = None,
+    status: str | None = None,
+    toner_level: int | None = None,
+    status_detail: str | None = None,
+) -> None:
+    """Best-effort append-only trail. Never fails the parent write."""
+    try:
+        db.add(
+            models.StatusCheck(
+                printer_id=printer_id,
+                source=source,
+                ok=ok,
+                status=status,
+                toner_level=toner_level,
+                status_detail=status_detail,
+                created_at=_utcnow(),
+            )
+        )
+        db.commit()
+    except Exception:
+        try:
+            db.rollback()
+        except Exception:
+            pass
+
+
 def apply_human_status(
     db: Session,
     printer: models.Printer,
@@ -64,10 +102,8 @@ def apply_human_status(
     toner_level: Optional[int] = ...,  # Ellipsis = omitted
 ) -> models.Printer:
     """
-    Human verification write. Presence of status and/or toner_level (including
-    same values) counts as verification — not value-diff.
-    Resets fail_streak so agent noise cannot immediately undo a human check.
-    Does not run for metadata-only updates (caller must not invoke this).
+    Human verification write. Presence of status and/or toner_level counts
+    as verification. Resets fail_streak. Clears status_detail.
     """
     if status is None and toner_level is ...:
         return printer
@@ -87,22 +123,23 @@ def apply_human_status(
         printer.status = status
 
     printer.last_verified_at = now
-    printer.last_checked = now  # legacy mirror
+    printer.last_checked = now
     printer.fail_streak = 0
-    # Human verification fully supersedes agent-side detail (e.g. leftover unreachable)
     printer.status_detail = None
 
     db.add(printer)
     db.commit()
     db.refresh(printer)
+    record_status_check(
+        db,
+        printer.id,
+        source="human",
+        ok=True,
+        status=printer.status,
+        toner_level=printer.toner_level,
+        status_detail=None,
+    )
     return printer
-
-
-ALLOWED_STATUS_DETAILS = frozenset({
-    "unreachable",
-    "device_reported",
-    "probe_skipped_cloud_disabled",
-})
 
 
 def apply_agent_result(
@@ -116,12 +153,9 @@ def apply_agent_result(
 ) -> models.Printer:
     """
     Agent probe result.
-
-    - ok=True + status_detail=device_reported: reachable, device says offline (immediate)
-    - ok=True otherwise: successful read; clear streak; touch both clocks
-    - ok=False: unreachable path; atomic streak++; flip display after N or fail-window
-
-    status_detail must be one of ALLOWED_STATUS_DETAILS or None (validated at API boundary).
+    - ok=True + status_detail=device_reported: immediate offline trust
+    - ok=True otherwise: successful read
+    - ok=False: unreachable; debounce before display flip
     """
     now = _utcnow()
     printer.last_attempt_at = now
@@ -135,6 +169,15 @@ def apply_agent_result(
         db.add(printer)
         db.commit()
         db.refresh(printer)
+        record_status_check(
+            db,
+            printer.id,
+            source="agent",
+            ok=True,
+            status=printer.status,
+            toner_level=printer.toner_level,
+            status_detail="device_reported",
+        )
         return printer
 
     if ok:
@@ -153,10 +196,18 @@ def apply_agent_result(
         db.add(printer)
         db.commit()
         db.refresh(printer)
+        record_status_check(
+            db,
+            printer.id,
+            source="agent",
+            ok=True,
+            status=printer.status,
+            toner_level=printer.toner_level,
+            status_detail=status_detail,
+        )
         return printer
 
-    # Unreachable / transport failure — debounce
-    # Atomic increment to avoid lost updates under concurrent agent posts
+    # Unreachable — atomic streak increment
     db.execute(
         update(models.Printer)
         .where(models.Printer.id == printer.id)
@@ -167,28 +218,36 @@ def apply_agent_result(
 
     streak = int(printer.fail_streak or 0)
     verified = printer.last_verified_at
-    window_exceeded = False
+    in_window = False
     if verified is not None:
-        v = verified.replace(tzinfo=None) if getattr(verified, "tzinfo", None) else verified
-        window_exceeded = (now - v) > FAIL_WINDOW
-    else:
-        # Never verified: still require N failures before calling it unreachable on board
-        window_exceeded = False
+        try:
+            v = verified.replace(tzinfo=None) if getattr(verified, "tzinfo", None) else verified
+            in_window = (_utcnow() - v) <= FAIL_WINDOW
+        except Exception:
+            in_window = False
 
-    if streak >= FAIL_STREAK_THRESHOLD or window_exceeded:
+    if streak >= FAIL_STREAK_THRESHOLD or not in_window:
         printer.status = "unknown"
         printer.status_detail = status_detail or "unreachable"
-        # Do NOT touch last_verified_at — reading is not verified
         db.add(printer)
         db.commit()
         db.refresh(printer)
 
+    record_status_check(
+        db,
+        printer.id,
+        source="agent",
+        ok=False,
+        status=printer.status,
+        toner_level=printer.toner_level,
+        status_detail=status_detail or "unreachable",
+    )
     return printer
 
 
 def effective_status(printer: models.Printer) -> str:
-    """Fail-closed display status: stale wins over old low/ok."""
-    days = _days_since(getattr(printer, "last_verified_at", None) or printer.last_checked)
+    verified = getattr(printer, "last_verified_at", None) or printer.last_checked
+    days = _days_since(verified)
     if days is not None and days > STALE_AFTER_DAYS:
         return "unknown"
 
@@ -198,9 +257,9 @@ def effective_status(printer: models.Printer) -> str:
     if detail == "unreachable" and (printer.fail_streak or 0) >= FAIL_STREAK_THRESHOLD:
         return "unknown"
 
-    toner = printer.toner_level
-    if toner is not None and toner <= LOW_TONER_THRESHOLD and days is not None and days <= STALE_AFTER_DAYS:
-        return "low"
+    if printer.toner_level is not None and printer.toner_level <= LOW_TONER_THRESHOLD:
+        if days is None or days <= STALE_AFTER_DAYS:
+            return "low"
 
     if raw in {"low", "offline", "online", "unknown", "ok"}:
         return "online" if raw == "ok" else raw
@@ -237,16 +296,16 @@ def serialize_status_fields(printer: models.Printer) -> dict:
     attempt_age = _human_age(attempt)
 
     age_note = None
-    if verified is None and (printer.toner_level is None) and (printer.status or "unknown") == "unknown":
-        age_note = "Never verified — no poll yet"
+    if verified is None and printer.toner_level is None and (printer.status or "unknown") == "unknown":
+        age_note = "Not checked yet"
     elif stale and printer.toner_level is not None:
-        age_note = f"Stale — last good read {printer.toner_level}% ({verified_age})"
+        age_note = f"Stale — last checked {printer.toner_level}% ({verified_age})"
     elif stale:
-        age_note = f"Stale — last good read {verified_age}"
+        age_note = f"Stale — last checked {verified_age}"
     elif verified_age:
-        age_note = f"Last good read {verified_age}"
+        age_note = f"Checked {verified_age}"
         if attempt_age and attempt != verified:
-            age_note += f" · last poll try {attempt_age}"
+            age_note += f" · last try {attempt_age}"
 
     return {
         "status": eff,

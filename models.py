@@ -57,6 +57,20 @@ class Job(Base):
     timestamp = Column(DateTime, default=func.now())
 
 
+class StatusCheck(Base):
+    """Append-only check trail for support evidence (Goal 1 freshness / Goal 2 bills)."""
+    __tablename__ = "status_checks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    printer_id = Column(Integer, ForeignKey("printers.id"), nullable=False, index=True)
+    source = Column(String, default="agent")  # agent | human
+    ok = Column(Boolean, nullable=True)
+    status = Column(String, nullable=True)
+    toner_level = Column(Integer, nullable=True)
+    status_detail = Column(String, nullable=True)
+    created_at = Column(DateTime, default=func.now(), index=True)
+
+
 class Alert(Base):
     __tablename__ = "alerts"
 

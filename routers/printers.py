@@ -164,3 +164,38 @@ async def scan(
             "will only contact IPs you list — never your whole subnet."
         ),
     )
+
+
+@router.get("/{printer_id}/checks")
+def list_status_checks(
+    printer_id: int,
+    limit: int = 10,
+    db: Session = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    """Recent status checks for evidence trail (Goal 1 / Goal 2)."""
+    printer = get_printer(db, printer_id)
+    if not printer:
+        raise HTTPException(status_code=404, detail="Printer not found")
+    limit = max(1, min(limit, 50))
+    rows = (
+        db.query(models.StatusCheck)
+        .filter(models.StatusCheck.printer_id == printer_id)
+        .order_by(models.StatusCheck.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return {
+        "checks": [
+            {
+                "id": r.id,
+                "source": r.source,
+                "ok": r.ok,
+                "status": r.status,
+                "toner_level": r.toner_level,
+                "status_detail": r.status_detail,
+                "created_at": r.created_at.isoformat() if r.created_at else None,
+            }
+            for r in rows
+        ]
+    }
