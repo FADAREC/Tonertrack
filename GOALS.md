@@ -19,6 +19,27 @@ without chasing rooms, chats, or user complaints first.
 
 ---
 
+
+
+---
+
+## Goal 1 metrics (internal)
+
+Primary:
+- **Time-to-status** — minutes from “printer problem” to knowing status on the board (target: down, &lt; 2 min for covered printers)
+- **Board-first rate** — % of printer status questions where support opens the board first (target: ≥ 70% on covered fleet)
+- **Status freshness** — % of listed printers with last good check inside the agreed window (target: ≥ 90% in work hours)
+- **Stale / unknown burden** — count or % stale/unknown in work hours (target: down)
+
+Secondary:
+- Repeat “is it empty?” loops same day (down)
+- Status interrupt noise in chat / walk-ups (down)
+- Coverage — % of floor’s shared printers listed on the board (up toward 100%)
+
+**Goal 1 gate (one floor, ≥ 2 weeks):** ≥90% fresh in-window; board-first majority or lead sign-off; support lead confirms less status-chasing; time-to-status better than pre-board.
+
+Anti-metrics: signups, vanity DAU, feature count, praise without behavior change.
+
 ## Goal 2 — Shared board for transparency (spend, trust, EOL)
 
 The same board gives a shared picture so toner and maintenance reality
