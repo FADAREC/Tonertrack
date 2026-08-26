@@ -53,9 +53,28 @@ export const agentAPI = {
   createToken: (name = 'default') => api.post('/agent/tokens', { name }),
   revokeToken: (id: number) => api.post(`/agent/tokens/${id}/revoke`),
   enableHelperDownload: (id: number) => api.post(`/agent/tokens/${id}/enable-helper-download`),
+  quickSetup: () => api.post('/agent/quick-setup'),
   getPollConfig: () => api.get('/agent/poll-config'),
   setPollConfig: (poll_interval_seconds: number) =>
     api.put('/agent/poll-config', { poll_interval_seconds }),
+  /** Download Windows starter; pass raw access key (shown once at setup). */
+  downloadStarterBat: async (rawToken: string) => {
+    const base = process.env.REACT_APP_API_URL || '';
+    const res = await fetch(`${base}/agent/helper/starter.bat`, {
+      headers: { 'X-Agent-Token': rawToken },
+    });
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(err || 'Download failed');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Run-TonerTrack-Checker.bat';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 export const statsAPI = {

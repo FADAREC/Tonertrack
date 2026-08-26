@@ -205,6 +205,26 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
         </div>
       </header>
 
+      {/* Goal 1 path: get printers listed and checks running */}
+      {!loading && (
+        <div className="tt-card px-4 py-3 space-y-2">
+          <p className="text-sm font-medium text-[#f2f5ff]">Get the board useful for support</p>
+          <ul className="text-xs text-[#8b9bb8] space-y-1">
+            <li>{printers.length > 0 ? 'Done' : 'Next'}: Add the printers on this floor (with network addresses).</li>
+            <li>{freshCount > 0 ? 'Done' : 'Next'}: Run the office checker so status stays current.</li>
+            <li>Support opens this board first when a printer problem is reported.</li>
+          </ul>
+          <div className="flex flex-wrap gap-2 pt-1">
+            {printers.length === 0 && (
+              <Link to="/add-printer" className="tt-btn tt-btn-primary text-xs">Add printers</Link>
+            )}
+            {printers.length > 0 && freshCount === 0 && (
+              <Link to="/helper" className="tt-btn tt-btn-primary text-xs">Set up office checker</Link>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Glance strip — quiet when healthy */}
       {!loading && (lowCount > 0 || staleCount > 0) && (
         <div
@@ -485,7 +505,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
       </div>
 
       {printers.length > 0 && printers.length < 5 && (
-        <p className="text-xs text-[#5c6b86] text-center">Free plan · {printers.length}/5 printers</p>
+        <p className="text-xs text-[#5c6b86] text-center">Listed · {printers.length} printers</p>
       )}
 
       <div className="tt-thumb-bar md:hidden">

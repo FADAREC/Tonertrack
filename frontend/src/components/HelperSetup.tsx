@@ -17,7 +17,6 @@ type TokenRow = {
 const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
   const [tokens, setTokens] = useState<TokenRow[]>([]);
   const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
   const [rawOnce, setRawOnce] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -30,7 +29,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       const res = await agentAPI.listTokens();
       setTokens(res.data || []);
     } catch (e: any) {
-      setError(e?.response?.data?.detail || 'Only an admin can manage this. Sign in with an admin account.');
+      setError(e?.response?.data?.detail || 'Only an admin can manage the office checker.');
     } finally {
       setLoading(false);
     }
@@ -40,45 +39,47 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
     load();
   }, []);
 
-  const createToken = async () => {
+  const quickSetup = async () => {
     setBusy(true);
     setError('');
-    setInfo('');
     setRawOnce(null);
     try {
-      const res = await agentAPI.createToken(`office-${new Date().toISOString().slice(0, 10)}`);
+      const res = await agentAPI.quickSetup();
       setRawOnce(res.data.raw_token);
-      setInfo(res.data.warning || 'Store this token now. It will not be shown again.');
+      toast.success('Access key created');
       await load();
     } catch (e: any) {
-      setError(e?.response?.data?.detail || 'Could not create token');
+      setError(e?.response?.data?.detail || 'Could not set up office checker');
     } finally {
       setBusy(false);
     }
   };
 
-  const enableDownload = async (id: number) => {
+  const downloadStarter = async () => {
+    if (!rawOnce) {
+      setError('Create an access key first, then download the Windows file while the key is still on screen.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
-      await agentAPI.enableHelperDownload(id);
-      setInfo('Helper download enabled for this token.');
-      await load();
+      await agentAPI.downloadStarterBat(rawOnce);
+      toast.success('Starter downloaded');
     } catch (e: any) {
-      setError(e?.response?.data?.detail || 'Could not enable download');
+      setError(e?.message || 'Download failed');
     } finally {
       setBusy(false);
     }
   };
 
   const revoke = async (id: number) => {
-    if (!window.confirm('Revoke this token? The office helper will stop reporting until you issue a new one.')) return;
+    if (!window.confirm('Stop this office checker key? Status updates from it will stop.')) return;
     setBusy(true);
     try {
       await agentAPI.revokeToken(id);
       await load();
     } catch (e: any) {
-      setError(e?.response?.data?.detail || 'Revoke failed');
+      setError(e?.response?.data?.detail || 'Could not revoke');
     } finally {
       setBusy(false);
     }
@@ -92,47 +93,53 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
     setTimeout(() => setCopied(false), 1500);
   };
 
-  const base = window.location.origin;
-
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <header>
-        <p className="text-xs text-[#8b9bb8] mb-1">Office helper</p>
-        <h1 className="text-2xl font-semibold tracking-tight">Set up the office computer</h1>
+        <p className="text-xs text-[#8b9bb8] mb-1">Office checker</p>
+        <h1 className="text-2xl font-semibold tracking-tight">Keep the board up to date</h1>
         <p className="text-sm text-[#8b9bb8] mt-1">
-          Install a small program on one computer in the office. It checks only the printers you added
-          and updates the shared board. It does not look at the rest of your network.
+          Run a small program on one office computer. It checks only the printers on your board and
+          updates status so support does not have to walk the floor.
         </p>
       </header>
 
-      <ol className="tt-card divide-y divide-white/5">
-        {[
-          'Create an access key (admin only). Copy it immediately. You will not see it again.',
-          'Turn on download for that key so the helper file can be fetched.',
-          'On one office computer, download the helper and paste your access key when asked.',
-          'Run the helper. On the Printer board, choose how often it should check.',
-        ].map((step, i) => (
-          <li key={step} className="px-4 py-3 flex gap-3 text-sm text-zinc-300">
-            <span className="text-zinc-500 font-medium tabular-nums w-5">{i + 1}.</span>
-            {step}
-          </li>
-        ))}
+      <ol className="tt-card divide-y divide-white/5 text-sm text-[#f2f5ff]/90">
+        <li className="px-4 py-3">1. Add printers on the board (with network addresses).</li>
+        <li className="px-4 py-3">2. Create an access key and download the Windows starter.</li>
+        <li className="px-4 py-3">3. On an office PC, double-click the starter and leave the window open.</li>
       </ol>
 
       {error && (
         <p className="text-sm text-red-300 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3">{error}</p>
       )}
-      {info && (
-        <p className="text-sm text-emerald-200/90 bg-emerald-500/10 border border-emerald-500/20 rounded-xl px-4 py-3">
-          {info}
-        </p>
-      )}
+
+      <div className="flex flex-wrap gap-2">
+        <button type="button" disabled={busy} onClick={quickSetup} className="tt-btn tt-btn-primary">
+          <Key className="h-4 w-4" /> Create access key
+        </button>
+        <button
+          type="button"
+          disabled={busy || !rawOnce}
+          onClick={downloadStarter}
+          className="tt-btn tt-btn-ghost"
+        >
+          <Download className="h-4 w-4" /> Download Windows starter
+        </button>
+        <button type="button" onClick={load} className="tt-btn tt-btn-ghost">
+          <RefreshCw className="h-4 w-4" /> Refresh
+        </button>
+      </div>
 
       {rawOnce && (
-        <div className="tt-card p-4 border-amber-500/30">
-          <p className="text-xs text-amber-200/90 mb-2 font-medium">Save this key now. It will not be shown again.</p>
+        <div className="tt-card p-4 border border-amber-500/30">
+          <p className="text-xs text-amber-200/90 mb-2 font-medium">
+            Save this key. It will not be shown again. Download the Windows starter while you still have it.
+          </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-xs break-all bg-black/40 rounded-lg px-3 py-2 text-zinc-200">{rawOnce}</code>
+            <code className="flex-1 text-xs break-all bg-black/40 rounded-lg px-3 py-2 text-[#f2f5ff]">
+              {rawOnce}
+            </code>
             <button type="button" onClick={copyRaw} className="tt-btn tt-btn-ghost shrink-0">
               {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
             </button>
@@ -140,69 +147,42 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
         </div>
       )}
 
-      <div className="flex flex-wrap gap-2">
-        <button type="button" disabled={busy} onClick={createToken} className="tt-btn tt-btn-primary">
-          <Key className="h-4 w-4" /> Create access key
-        </button>
-        <button type="button" onClick={load} className="tt-btn tt-btn-ghost">
-          <RefreshCw className="h-4 w-4" /> Refresh
-        </button>
-      </div>
-
       <div className="space-y-2">
-        {loading && <p className="text-sm text-zinc-500">Loading tokens…</p>}
+        <p className="text-xs text-[#8b9bb8]">Existing keys</p>
+        {loading && <p className="text-sm text-[#8b9bb8]">Loading…</p>}
         {!loading && tokens.length === 0 && (
-          <p className="text-sm text-zinc-500">No access keys yet. Create one so you can download the helper.</p>
+          <p className="text-sm text-[#8b9bb8]">No keys yet. Create one to start automatic checks.</p>
         )}
-        {tokens.map((t) => (
-          <div key={t.id} className="tt-card px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        {tokens.map((tok) => (
+          <div key={tok.id} className="tt-card px-4 py-3 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-medium text-zinc-100 flex items-center gap-2">
-                <Shield className="h-3.5 w-3.5 text-zinc-500" />
-                {t.name}{' '}
-                <span className="text-zinc-500 font-normal">· {t.token_prefix}…</span>
+              <p className="text-sm font-medium text-[#f2f5ff] flex items-center gap-2">
+                <Shield className="h-3.5 w-3.5 text-[#8b9bb8]" />
+                {tok.name} <span className="text-[#8b9bb8] font-normal">· {tok.token_prefix}…</span>
               </p>
-              <p className="text-xs text-zinc-500 mt-0.5">
-                {t.revoked_at
+              <p className="text-xs text-[#8b9bb8] mt-0.5">
+                {tok.revoked_at
                   ? 'Revoked'
-                  : t.helper_download_enabled
-                    ? 'Download enabled'
+                  : tok.helper_download_enabled
+                    ? 'Download allowed'
                     : 'Download locked'}
-                {t.last_used_at ? ` · last used ${new Date(t.last_used_at).toLocaleString()}` : ' · never used'}
+                {tok.last_used_at
+                  ? ` · last used ${new Date(tok.last_used_at).toLocaleString()}`
+                  : ' · not used yet'}
               </p>
             </div>
-            <div className="flex gap-2">
-              {!t.revoked_at && !t.helper_download_enabled && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => enableDownload(t.id)}
-                  className="tt-btn tt-btn-ghost text-xs"
-                >
-                  <Download className="h-3.5 w-3.5" /> Allow download
-                </button>
-              )}
-              {!t.revoked_at && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => revoke(t.id)}
-                  className="tt-btn tt-btn-ghost text-xs text-red-300"
-                >
-                  Revoke
-                </button>
-              )}
-            </div>
+            {!tok.revoked_at && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => revoke(tok.id)}
+                className="tt-btn tt-btn-ghost text-xs text-red-300"
+              >
+                Revoke
+              </button>
+            )}
           </div>
         ))}
-      </div>
-
-      <div className="tt-card p-4">
-        <p className="text-sm font-medium text-zinc-100 mb-2">On the office computer</p>
-        <pre className="text-[11px] leading-relaxed text-zinc-400 bg-black/40 rounded-lg p-3 overflow-x-auto whitespace-pre-wrap">{`curl -H "X-Agent-Token: tt_YOUR_TOKEN" -o tonertrack_helper.py ${base}/agent/helper/download
-set TONERTRACK_URL=${base}
-set TONERTRACK_AGENT_TOKEN=tt_YOUR_TOKEN
-python tonertrack_helper.py`}</pre>
       </div>
     </div>
   );

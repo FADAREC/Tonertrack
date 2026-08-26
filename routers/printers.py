@@ -19,7 +19,7 @@ router = APIRouter(prefix="/printers", tags=["printers"])
 
 
 # Pilot policy: free tier hard cap
-FREE_PRINTER_CAP = 5
+FREE_PRINTER_CAP = 40  # one office floor; Goal 1 coverage
 
 
 def _serialize(p: models.Printer) -> dict:

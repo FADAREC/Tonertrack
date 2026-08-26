@@ -30,7 +30,7 @@ from services.settings_service import (
     ALLOWED_POLL_INTERVALS,
 )
 from crud import get_printers
-from fastapi.responses import FileResponse, PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse, Response, PlainTextResponse, Response
 import os
 from pathlib import Path as FsPath
 from routers.printers import _serialize
@@ -307,4 +307,126 @@ def download_helper(
         path=str(helper_path),
         filename="tonertrack_helper.py",
         media_type="text/x-python",
+    )
+
+
+
+@router.post("/quick-setup", summary="One-step office helper setup for admin")
+def quick_setup_helper(
+    db: Session = Depends(get_db),
+    current_user: UserInDB = Depends(get_current_user),
+):
+    """Create access key, enable download, return raw key once."""
+    _require_admin(current_user)
+    row, raw = create_agent_token(
+        db, created_by=current_user.username, name="office-checker"
+    )
+    row.helper_download_enabled = True
+    db.add(row)
+    db.add(
+        models.AuditEvent(
+            action="helper_quick_setup",
+            actor=current_user.username,
+            detail=f"token_id={row.id} prefix={row.token_prefix}",
+            created_at=datetime.utcnow(),
+        )
+    )
+    db.commit()
+    db.refresh(row)
+    return {
+        "token": _public_token(row),
+        "raw_token": raw,
+        "warning": "Save this access key. It will not be shown again.",
+        "next": "Download the Windows starter, copy it to an office PC, and double-click it.",
+    }
+
+
+@router.get("/helper/starter.bat", summary="Windows starter that runs the office helper")
+def download_windows_starter(
+    db: Session = Depends(get_db),
+    x_agent_token: Optional[str] = Header(None, alias="X-Agent-Token"),
+    authorization: Optional[str] = Header(None),
+):
+    """Returns a .bat that embeds the access key and runs the helper."""
+    import os
+
+    raw = None
+    if x_agent_token:
+        raw = x_agent_token.strip()
+    elif authorization and authorization.lower().startswith("bearer "):
+        raw = authorization[7:].strip()
+    if not raw:
+        raise HTTPException(status_code=401, detail="Access key required")
+
+    agent = verify_agent_token(db, raw)
+    if not agent:
+        raise HTTPException(status_code=401, detail="Invalid or revoked access key")
+
+    log = models.HelperDownloadLog(
+        token_id=agent.id,
+        token_prefix=agent.token_prefix,
+        actor="agent_token",
+        success=False,
+        detail="starter_bat",
+        created_at=datetime.utcnow(),
+    )
+    if not getattr(agent, "helper_download_enabled", False):
+        log.detail = "download_not_enabled"
+        db.add(log)
+        db.commit()
+        raise HTTPException(status_code=403, detail="Helper download not enabled for this key.")
+    if agent.revoked_at is not None:
+        log.detail = "token_revoked"
+        db.add(log)
+        db.commit()
+        raise HTTPException(status_code=401, detail="Access key revoked")
+
+    base = (
+        os.environ.get("PUBLIC_BASE_URL")
+        or os.environ.get("RENDER_EXTERNAL_URL")
+        or "https://tonertrack.onrender.com"
+    ).rstrip("/")
+
+    safe_raw = raw.replace("%", "%%")
+
+    bat = (
+        "@echo off\r\n"
+        "setlocal\r\n"
+        "title TonerTrack office checker\r\n"
+        "echo.\r\n"
+        "echo TonerTrack office checker\r\n"
+        "echo Checks only printers on your board. Does not scan the network.\r\n"
+        "echo.\r\n"
+        f"set TONERTRACK_URL={base}\r\n"
+        f"set TONERTRACK_AGENT_TOKEN={safe_raw}\r\n"
+        "\r\n"
+        "where python >nul 2>nul\r\n"
+        "if errorlevel 1 (\r\n"
+        "  echo Python was not found. Install Python 3 and enable Add Python to PATH.\r\n"
+        "  pause\r\n"
+        "  exit /b 1\r\n"
+        ")\r\n"
+        "\r\n"
+        "echo Downloading helper...\r\n"
+        "curl -sS -H \"X-Agent-Token: %TONERTRACK_AGENT_TOKEN%\" -o \"%~dp0tonertrack_helper.py\" \"%TONERTRACK_URL%/agent/helper/download\"\r\n"
+        "if errorlevel 1 (\r\n"
+        "  echo Download failed. Check internet and access key.\r\n"
+        "  pause\r\n"
+        "  exit /b 1\r\n"
+        ")\r\n"
+        "\r\n"
+        "echo Starting checker. Leave this window open.\r\n"
+        "echo.\r\n"
+        "python \"%~dp0tonertrack_helper.py\"\r\n"
+        "pause\r\n"
+    )
+    log.success = True
+    log.detail = "starter_bat_ok"
+    db.add(log)
+    db.commit()
+    touch_last_used(db, agent)
+    return Response(
+        content=bat,
+        media_type="application/octet-stream",
+        headers={"Content-Disposition": "attachment; filename=Run-TonerTrack-Checker.bat"},
     )
