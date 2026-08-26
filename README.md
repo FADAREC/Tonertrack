@@ -1,5 +1,9 @@
 # TonerTrack
 
+**Product goals (source of truth):** see [`GOALS.md`](./GOALS.md).
+
+Until both goals there are achieved: **no pilot, no customer testing push.**
+
 Printer toner visibility for a company fleet. Hosted frontend + backend.
 
 ## What it does (v1 / Step 1)
