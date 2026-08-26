@@ -45,6 +45,7 @@ export const printersAPI = {
   update: (id: number, data: Record<string, unknown>) => api.patch(`/printers/${id}`, data),
   get: (id: number) => api.get(`/printers/${id}`),
   delete: (id: number) => api.delete(`/printers/${id}`),
+  checks: (id: number, limit = 10) => api.get(`/printers/${id}/checks?limit=${limit}`),
 };
 
 export const agentAPI = {

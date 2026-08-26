@@ -84,6 +84,8 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
   const [pollSaving, setPollSaving] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [checksById, setChecksById] = useState<Record<number, any[]>>({});
+  const [checksLoading, setChecksLoading] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -170,6 +172,13 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
     (p) => !p.stale && (p.status === 'low' || (p.toner_level != null && p.toner_level <= 20))
   ).length;
   const staleCount = printers.filter((p) => p.stale || p.status === 'unknown').length;
+  // Goal 1: operational freshness = checked within 2x poll interval (default 30 min if unknown)
+  const freshWindowSec = Math.max(1800, (pollSeconds || 900) * 2);
+  const freshCount = printers.filter((p) => {
+    if (p.seconds_since_verified == null) return false;
+    return p.seconds_since_verified <= freshWindowSec;
+  }).length;
+  const freshnessPct = printers.length ? Math.round((100 * freshCount) / printers.length) : 0;
 
   return (
     <div className="max-w-5xl mx-auto space-y-5 sm:space-y-6 pb-24 md:pb-6">
@@ -225,7 +234,12 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: 'Total', value: printers.length, icon: Printer, kind: 'plain' as const },
-          { label: 'Online', value: online, icon: Activity, kind: online > 0 ? 'live' : 'plain' },
+          {
+            label: 'Checked on time',
+            value: loading ? '…' : `${freshCount}/${printers.length || 0}`,
+            icon: Activity,
+            kind: printers.length && freshnessPct >= 90 ? 'live' : printers.length ? 'warn' : 'plain',
+          },
           { label: 'Low toner', value: lowCount, icon: AlertTriangle, kind: lowCount > 0 ? 'danger' : 'plain' },
           { label: 'Needs check', value: staleCount, icon: HelpCircle, kind: staleCount > 0 ? 'warn' : 'plain' },
         ].map(({ label, value, icon: Icon, kind }) => (
@@ -316,7 +330,24 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
               <div
                 role="button"
                 tabIndex={0}
-                onClick={() => setExpandedId(open ? null : p.id)}
+                onClick={async () => {
+                  if (open) {
+                    setExpandedId(null);
+                    return;
+                  }
+                  setExpandedId(p.id);
+                  if (!checksById[p.id]) {
+                    setChecksLoading(p.id);
+                    try {
+                      const res = await printersAPI.checks(p.id, 8);
+                      setChecksById((prev) => ({ ...prev, [p.id]: res.data.checks || [] }));
+                    } catch {
+                      setChecksById((prev) => ({ ...prev, [p.id]: [] }));
+                    } finally {
+                      setChecksLoading(null);
+                    }
+                  }
+                }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
                     e.preventDefault();
@@ -424,12 +455,27 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                     <p>Mode · {p.connection_mode || 'manual'}</p>
                     <p>Status detail · {p.status_detail ? p.status_detail.replace(/_/g, ' ') : 'n/a'}</p>
                     <p>Fail streak · {p.fail_streak ?? 0}</p>
+                    <p>{ageText(p)}</p>
+                    <p className="tt-mono">{p.ip_address || 'No IP for helper'}</p>
                   </div>
                   <div className="space-y-1 pt-3">
-                    <p className="text-[10px] text-[#5c6b86]">Trust</p>
-                    <p>{ageText(p)}</p>
-                    <p className="tt-mono text-[#f2f5ff]/90">{p.ip_address || 'No IP for helper'}</p>
-                    <p>{[p.department, p.location].filter(Boolean).join(' · ') || 'No place tags'}</p>
+                    <p className="text-[10px] text-[#5c6b86]">Recent checks (evidence)</p>
+                    {checksLoading === p.id && <p>Loading…</p>}
+                    {(checksById[p.id] || []).length === 0 && checksLoading !== p.id && (
+                      <p>No checks recorded yet.</p>
+                    )}
+                    <ul className="space-y-1">
+                      {(checksById[p.id] || []).map((c: any) => (
+                        <li key={c.id} className="flex flex-wrap gap-x-2">
+                          <span className="text-[#f2f5ff]/90">
+                            {c.created_at ? new Date(c.created_at).toLocaleString() : ''}
+                          </span>
+                          <span>{c.source}</span>
+                          <span>{c.ok === false ? 'failed' : c.status || 'ok'}</span>
+                          {c.toner_level != null && <span>{c.toner_level}%</span>}
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 </div>
               )}
