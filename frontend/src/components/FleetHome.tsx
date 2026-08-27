@@ -277,6 +277,11 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
           </div>
         ))}
       </div>
+      {!loading && printers.length > 0 && (
+        <p className="text-xs text-[#8b9bb8]">
+          Goal 1 target: at least 90% checked on time during work hours. Now {freshnessPct}%.
+        </p>
+      )}
 
       {allowedIntervals.length > 0 && (
         <div className="tt-card p-4">

@@ -46,7 +46,7 @@ def api(url: str, token: str, method: str = "GET", body: dict | None = None) -> 
         headers={
             "Content-Type": "application/json",
             "X-Agent-Token": token,
-            "User-Agent": "TonerTrackHelper/1.1",
+            "User-Agent": "TonerTrackHelper/1.2",
         },
     )
     with urllib.request.urlopen(req, timeout=45) as resp:
@@ -179,22 +179,53 @@ def snmp_get_v1(ip: str, oid: tuple, community: str = "public", timeout: float =
     return strs[-1] if strs else None
 
 
-def snmp_toner_percent(ip: str, community: str = "public") -> int | None:
-    level = snmp_get_v1(ip, OID_SUPPLY_LEVEL, community)
-    maximum = snmp_get_v1(ip, OID_SUPPLY_MAX, community)
+def _toner_from_level_max(level, maximum) -> int | None:
     if level is None or not isinstance(level, int):
         return None
-    # Some devices report -1 / -2 / -3 for unknown / low / empty
     if level < 0:
         if level in (-2, -3):
             return 0
         return None
     if maximum is not None and isinstance(maximum, int) and maximum > 0:
         return max(0, min(100, int(round(100.0 * level / maximum))))
-    # Already a percentage on some firmwares
     if 0 <= level <= 100:
         return level
     return None
+
+
+def snmp_toner_percent(ip: str, community: str = "public") -> int | None:
+    """Try common Printer-MIB supply indexes (mono + color slots)."""
+    for idx in (1, 2, 3, 4):
+        level_oid = (1, 3, 6, 1, 2, 1, 43, 11, 1, 1, 9, 1, idx)
+        max_oid = (1, 3, 6, 1, 2, 1, 43, 11, 1, 1, 8, 1, idx)
+        level = snmp_get_v1(ip, level_oid, community)
+        maximum = snmp_get_v1(ip, max_oid, community)
+        pct = _toner_from_level_max(level, maximum)
+        if pct is not None:
+            return pct
+    return None
+
+
+def snmp_toner_any_community(ip: str, primary: str = "public") -> int | None:
+    communities = []
+    for c in (primary, "public", "private"):
+        if c and c not in communities:
+            communities.append(c)
+    for c in communities:
+        pct = snmp_toner_percent(ip, c)
+        if pct is not None:
+            return pct
+    return None
+
+
+def tcp_reachable(ip: str, ports=(9100, 80, 443, 631), timeout: float = 1.5) -> bool:
+    for port in ports:
+        try:
+            with socket.create_connection((ip, port), timeout=timeout):
+                return True
+        except Exception:
+            continue
+    return False
 
 
 def web_toner_percent(ip: str) -> int | None:
@@ -203,7 +234,7 @@ def web_toner_percent(ip: str) -> int | None:
     ctx.verify_mode = ssl.CERT_NONE
     for url in (f"http://{ip}/", f"https://{ip}/", f"http://{ip}/hp/device/this.LCDispatcher"):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "TonerTrackHelper/1.1"})
+            req = urllib.request.Request(url, headers={"User-Agent": "TonerTrackHelper/1.2"})
             with urllib.request.urlopen(req, timeout=4, context=ctx) as resp:
                 text = resp.read().decode("utf-8", errors="ignore")
             # common patterns
@@ -226,28 +257,34 @@ def web_toner_percent(ip: str) -> int | None:
 def probe_printer(ip: str, community: str = "public") -> dict:
     """
     Automatic online + toner from the LAN.
-    Priority: SNMP toner → web toner → ping-only online.
+    Priority: SNMP toner (multi-index/community) → web → ping/tcp online.
     """
-    online = ping_host(ip)
-    toner = snmp_toner_percent(ip, community)
+    toner = snmp_toner_any_community(ip, community)
     if toner is None:
         toner = web_toner_percent(ip)
 
-    # SNMP response without ping (some devices block ICMP)
     if toner is not None:
         status = "low" if toner <= 20 else "online"
-        return {"ok": True, "status": status, "toner_level": toner}
+        return {"ok": True, "status": status, "toner_level": toner, "status_detail": None}
+
+    online = ping_host(ip) or tcp_reachable(ip)
 
     if online:
-        # Reachable but no toner metric — still automatic online, no fake %
-        return {"ok": True, "status": "online"}
+        return {"ok": True, "status": "online", "status_detail": None}
 
-    # Try SNMP sysDescr as reachability if ping failed
-    descr = snmp_get_v1(ip, OID_SYS_DESCR, community)
-    if descr is not None:
-        return {"ok": True, "status": "online"}
+    # SNMP sysDescr as reachability when ICMP/TCP blocked but SNMP open
+    for c in (community, "public"):
+        if not c:
+            continue
+        descr = snmp_get_v1(ip, OID_SYS_DESCR, c)
+        if descr is not None:
+            return {"ok": True, "status": "online", "status_detail": None}
 
-    return {"ok": False, "status_detail": "unreachable"}
+    return {
+        "ok": False,
+        "status": "unknown",
+        "status_detail": "unreachable",
+    }
 
 
 def report(base: str, token: str, printer_id: int, result: dict) -> dict:

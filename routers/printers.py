@@ -177,7 +177,7 @@ def list_status_checks(
     printer = get_printer(db, printer_id)
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
-    limit = max(1, min(limit, 50))
+    limit = max(1, min(limit, 100))
     rows = (
         db.query(models.StatusCheck)
         .filter(models.StatusCheck.printer_id == printer_id)
