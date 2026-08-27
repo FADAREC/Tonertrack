@@ -1,10 +1,10 @@
 # TonerTrack
 
-**Product goals (source of truth):** see [`GOALS.md`](./GOALS.md).
+**Plan (source of truth):** [`GOALS.md`](./GOALS.md)
 
-Until both goals there are achieved: **no pilot, no customer testing push.**
+Two goals: cut support time on printer downtime; make printer bills defensible with real data.
+Buyer: Investment One first. Operating model: narrow launch → one-week stickiness test → fix or next warm target.
 
-Printer toner visibility for a company fleet. Hosted frontend + backend.
 
 ## What it does (v1 / Step 1)
 

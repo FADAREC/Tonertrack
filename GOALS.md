@@ -1,88 +1,87 @@
-# TonerTrack — product goals (do not dilute)
+# TonerTrack — locked plan (remade)
 
-These are the only success criteria that matter until both are true.
-Every feature, UI change, demo, and outreach decision must serve them.
-If work does not move one of these forward, do not do it.
+Do not dilute. Re-read before any build or outreach decision.
 
 ---
 
-## Goal 1 — Make work easier for the support team
+## Two goals (unchanged)
 
-Support can see the status of the printers that matter (floor / site)
-without chasing rooms, chats, or user complaints first.
-
-**Done looks like:**
-- One shared board is usable day to day by support
-- Online / low toner / needs check is obvious without training
-- Status is fresh enough to trust (including *when it was last checked*)
-- Less interrupt-driven “is it really down / empty?”
+1. **Cut support time lost to printer downtime** — status without floor-chasing.
+2. **Make printer bills / consumables defensible with real data** — shared board, not “whoever shouted last.”
 
 ---
 
+## Buyer
 
-
----
-
-## Goal 1 metrics (internal)
-
-Primary:
-- **Time-to-status** — minutes from “printer problem” to knowing status on the board (target: down, &lt; 2 min for covered printers)
-- **Board-first rate** — % of printer status questions where support opens the board first (target: ≥ 70% on covered fleet)
-- **Status freshness** — % of listed printers with last good check inside the agreed window (target: ≥ 90% in work hours)
-- **Stale / unknown burden** — count or % stale/unknown in work hours (target: down)
-
-Secondary:
-- Repeat “is it empty?” loops same day (down)
-- Status interrupt noise in chat / walk-ups (down)
-- Coverage — % of floor’s shared printers listed on the board (up toward 100%)
-
-**Goal 1 gate (one floor, ≥ 2 weeks):** ≥90% fresh in-window; board-first majority or lead sign-off; support lead confirms less status-chasing; time-to-status better than pre-board.
-
-Anti-metrics: signups, vanity DAU, feature count, praise without behavior change.
-
-## Goal 2 — Shared board for transparency (spend, trust, EOL)
-
-The same board gives a shared picture so toner and maintenance reality
-is not based on whoever shouted last. Support has non-technical evidence
-for back-to-back toner or repair. The organisation can push machines
-toward full useful life instead of replacing on panic or habit.
-
-**Done looks like:**
-- Time-stamped status and toner (and related facts) on the board
-- A trail support can point at when bills or repeat work are questioned
-- Leadership / finance can look at the *same* board support uses
-- Foundation for EOL discipline (visibility first; not a fake CMMS)
+- **First:** Investment One (known floor, finance-profile org).
+- **If pilot #1 dies:** next warm target in the **same finance-profile world**.
+- **Not next:** LUTH / hospital procurement (too slow for fail-fast).
 
 ---
 
-## Hard rule — no pilot until both goals are achieved
+## Price
 
-There is **no pilot**, no “just try it”, and no asking busy people to
-test until the system actually delivers Goal 1 **and** Goal 2.
-
-We do not pilot promises. We only put this in front of a customer when
-support would actually use the board and the board could defend a bill.
+- Shape: **flat monthly per office**.
+- No number yet — learn from IT what downtime + vendor disputes cost them.
+- Pilot #1: **DB Pro flag only**. Do not build billing until the loop proves the wedge.
 
 ---
 
-## Pitch (the promise we are building toward)
+## Operating model (the loop)
 
-TonerTrack gives your support team a single live board for the printers
-that matter on a floor or site. It cuts the noise of chasing status by
-hand. The same board gives leadership and finance a shared view so toner
-and maintenance spend is not based on whoever shouted last — and so you
-can push machines to full useful life instead of replacing on panic or
-habit.
+This replaces a fixed “launch deadline.”
 
-**Support framing:** the board is not there to make support look
-untrustworthy. It protects them. When they need repeat toner or repair,
-the board is shared evidence — not only their word.
+1. Launch **narrow**.
+2. Watch real usage for **one week**.
+3. One question: *Did someone other than the founder check the board without being asked?*
+   - **Yes** → keep going; note what’s missing; push further.
+   - **No** → fail-fast, not failure: fix the one thing that killed stickiness; relaunch with next warm target if needed.
+4. Repeat.
+
+**Long-term marker (does not drive this week’s build):** 20 paying offices, team ≤5.
 
 ---
 
-## Decision test (use before every change)
+## Build order (only what serves Investment One live without you in the room)
 
-1. Does this make support’s day easier on the board?
-2. Does this make the board more trustworthy for spend / transparency / EOL?
+1. **Usable product UI for IT** — not `/docs` as the only status surface. Board must be obvious after login.
+2. **Manual board + one working agent cycle** for a **subset** of their printers (not all 30 first).
+3. **One person who isn’t the founder** checking it for a real week.
+4. **Parked until the loop proves the wedge once:**
+   - signed `.exe`
+   - firmware rollout
+   - multi-tenant
+   - real billing
+   - marketing, legal registration, CRM, forecasting
 
-If neither is a clear yes, stop. Re-read this file and choose different work.
+---
+
+## Goal 1 metrics (when measuring)
+
+- Time-to-status (down)
+- Board-first rate (up)
+- Status freshness % in-window (target ≥90% when checker runs)
+- Stale/unknown burden (down)
+
+**Stickiness test (the loop):** unprompted board open by non-founder in week 1.
+
+## Goal 2 (evidence)
+
+Time-stamped status/toner and a check trail support can point at when bills or repeat toner are questioned. Deepen after the board is actually used.
+
+---
+
+## Pitch (promise we are building toward)
+
+TonerTrack gives support a single live board for the printers that matter on a floor or site. It cuts the noise of chasing status by hand. The same board gives leadership and finance a shared view so toner and maintenance spend isn’t based on whoever shouted last — and so machines can be pushed toward full useful life instead of replacing on panic or habit.
+
+Support framing: the board protects them with shared evidence; it is not a trap.
+
+---
+
+## Decision test
+
+1. Does this get Investment One’s board live and usable without the founder in the room?
+2. Does this serve goal 1 or goal 2?
+
+If neither is a clear yes, stop.
