@@ -56,6 +56,9 @@ def create_refresh_token(data: dict) -> str:
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
+    from database import SessionLocal
+    import models
+
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -64,10 +67,21 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str | None = payload.get("sub")
-        email: str | None = payload.get("email")
-        role: str = payload.get("role") or "operator"
         if username is None or payload.get("type") != "access":
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-    return UserInDB(username=username, email=email or "", role=role)
+
+    db = SessionLocal()
+    try:
+        row = db.query(models.User).filter(models.User.username == username).first()
+        if not row:
+            raise credentials_exception
+        return UserInDB(
+            username=row.username,
+            email=row.email or "",
+            role=row.role or "admin",
+            workspace_id=row.workspace_id,
+        )
+    finally:
+        db.close()

@@ -3,26 +3,29 @@ from sqlalchemy.sql import func
 from database import Base
 
 
-class Printer(Base):
-    """Fleet device row.
+class Workspace(Base):
+    """Account boundary. Each self-serve signup creates one and is its admin."""
+    __tablename__ = "workspaces"
 
-    PILOT: single-tenant — there is no workspace_id. All printers on this
-    deployment share one global table. A second office on the same app would
-    see the same fleet. Multi-tenancy is a future migration, not a missing filter.
-    """
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False, default="My office")
+    created_at = Column(DateTime, default=func.now())
+
+
+class Printer(Base):
+    """Fleet device row, scoped to a workspace."""
     __tablename__ = "printers"
 
     id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
     name = Column(String, nullable=False)
     ip_address = Column(String, index=True)
     location = Column(String, default="")
     status = Column(String, default="unknown")
-    status_detail = Column(String, nullable=True)  # unreachable | device_reported | None
+    status_detail = Column(String, nullable=True)
     toner_level = Column(Integer, nullable=True)
     page_count = Column(Integer, default=0)
-    # Legacy mirror of last successful verification (kept for older rows/clients)
     last_checked = Column(DateTime, nullable=True)
-    # Two-clock model
     last_verified_at = Column(DateTime, nullable=True)
     last_attempt_at = Column(DateTime, nullable=True)
     fail_streak = Column(Integer, default=0, nullable=False)
@@ -41,7 +44,8 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
-    role = Column(String, default="operator")
+    role = Column(String, default="admin")
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
 
 
 class Job(Base):
@@ -58,12 +62,11 @@ class Job(Base):
 
 
 class StatusCheck(Base):
-    """Append-only check trail for support evidence (Goal 1 freshness / Goal 2 bills)."""
     __tablename__ = "status_checks"
 
     id = Column(Integer, primary_key=True, index=True)
     printer_id = Column(Integer, ForeignKey("printers.id"), nullable=False, index=True)
-    source = Column(String, default="agent")  # agent | human
+    source = Column(String, default="agent")
     ok = Column(Boolean, nullable=True)
     status = Column(String, nullable=True)
     toner_level = Column(Integer, nullable=True)
@@ -77,8 +80,8 @@ class Alert(Base):
     id = Column(Integer, primary_key=True, index=True)
     printer_id = Column(Integer, ForeignKey("printers.id"))
     message = Column(String)
-    alert_type = Column(String, default="low_toner", index=True)
-    timestamp = Column(DateTime, default=func.now())
+    severity = Column(String, default="info")
+    created_at = Column(DateTime, default=func.now())
     resolved = Column(Boolean, default=False)
 
 
@@ -86,8 +89,8 @@ class Setting(Base):
     __tablename__ = "settings"
 
     id = Column(Integer, primary_key=True, index=True)
-    key = Column(String, unique=True)
-    value = Column(String)
+    key = Column(String, unique=True, index=True, nullable=False)
+    value = Column(String, default="")
 
 
 class TrustPreference(Base):
@@ -101,41 +104,35 @@ class TrustPreference(Base):
 
 
 class AgentToken(Base):
-    """Opaque API key for local agents/one-shot reporters. Hashed at rest; shown once.
-
-    PILOT: single-tenant — token is deployment-scoped, not workspace-scoped.
-    Any valid token can report against any printer_id on this instance.
-    """
+    """Opaque API key for local agents. Hashed at rest; shown once."""
     __tablename__ = "agent_tokens"
 
     id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
     name = Column(String, default="default")
     token_hash = Column(String, nullable=False, unique=True, index=True)
-    token_prefix = Column(String, nullable=False)  # first 8 chars for admin UI identification
+    token_prefix = Column(String, nullable=False)
     created_by = Column(String, nullable=False)
     created_at = Column(DateTime, default=func.now())
     last_used_at = Column(DateTime, nullable=True)
     revoked_at = Column(DateTime, nullable=True)
     revoked_by = Column(String, nullable=True)
-    # Admin must enable before helper package can be downloaded with this token
     helper_download_enabled = Column(Boolean, default=False, nullable=False)
 
 
 class HelperDownloadLog(Base):
-    """Track every helper download attempt (success or denied)."""
     __tablename__ = "helper_download_logs"
 
     id = Column(Integer, primary_key=True, index=True)
     token_id = Column(Integer, ForeignKey("agent_tokens.id"), nullable=True)
     token_prefix = Column(String, default="")
-    actor = Column(String, default="")  # username if admin-triggered, or "agent_token"
+    actor = Column(String, default="")
     success = Column(Boolean, default=False)
     detail = Column(String, default="")
     created_at = Column(DateTime, default=func.now())
 
 
 class AuditEvent(Base):
-    """Simple audit trail (token issue/revoke, trust, admin transfer, etc.)."""
     __tablename__ = "audit_events"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -146,10 +143,8 @@ class AuditEvent(Base):
 
 
 class SiteVisit(Base):
-    """Lightweight page-view log for pilot traffic (not /health uptime pings)."""
     __tablename__ = "site_visits"
 
     id = Column(Integer, primary_key=True, index=True)
     path = Column(String, default="/", index=True)
     created_at = Column(DateTime, default=func.now(), index=True)
-

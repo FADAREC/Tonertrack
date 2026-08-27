@@ -100,7 +100,12 @@ def issue_token(
     current_user: UserInDB = Depends(get_current_user),
 ):
     _require_admin(current_user)
-    row, raw = create_agent_token(db, created_by=current_user.username, name=body.name)
+    row, raw = create_agent_token(
+        db,
+        created_by=current_user.username,
+        name=body.name,
+        workspace_id=getattr(current_user, "workspace_id", None),
+    )
     return {
         "token": _public_token(row),
         "raw_token": raw,
@@ -114,7 +119,10 @@ def list_tokens(
     current_user: UserInDB = Depends(get_current_user),
 ):
     _require_admin(current_user)
-    return [_public_token(r) for r in list_agent_tokens(db)]
+    return [
+        _public_token(r)
+        for r in list_agent_tokens(db, workspace_id=getattr(current_user, "workspace_id", None))
+    ]
 
 
 @router.post("/tokens/{token_id}/revoke", response_model=AgentTokenPublic)
@@ -140,7 +148,7 @@ def agent_report(
     Local agent/one-shot posts status. Auth checked on this request only.
     Narrow body — no fleet metadata writes.
     """
-    printer = get_printer(db, body.printer_id)
+    printer = get_printer(db, body.printer_id, workspace_id=getattr(agent, "workspace_id", None))
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     if not printer.ip_address:
@@ -179,7 +187,8 @@ def agent_fleet(
     agent: models.AgentToken = Depends(get_agent_from_header),
 ):
     """Printers the helper may poll (listed devices with an IP)."""
-    rows = get_printers(db, skip=0, limit=500)
+    ws = getattr(agent, "workspace_id", None)
+    rows = get_printers(db, skip=0, limit=500, workspace_id=ws)
     targets = []
     for p in rows:
         if not p.ip_address:
@@ -242,7 +251,12 @@ def enable_helper_download(
 ):
     """Admin grants helper download for this token."""
     _require_admin(current_user)
-    row = db.query(models.AgentToken).filter(models.AgentToken.id == token_id).first()
+    row = (
+        db.query(models.AgentToken)
+        .filter(models.AgentToken.id == token_id)
+        .filter(models.AgentToken.workspace_id == getattr(current_user, "workspace_id", None))
+        .first()
+    )
     if not row:
         raise HTTPException(status_code=404, detail="Token not found")
     if row.revoked_at is not None:
@@ -319,7 +333,10 @@ def quick_setup_helper(
     """Create access key, enable download, return raw key once."""
     _require_admin(current_user)
     row, raw = create_agent_token(
-        db, created_by=current_user.username, name="office-checker"
+        db,
+        created_by=current_user.username,
+        name="office-checker",
+        workspace_id=getattr(current_user, "workspace_id", None),
     )
     row.helper_download_enabled = True
     db.add(row)

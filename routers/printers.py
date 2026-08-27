@@ -46,7 +46,10 @@ def list_printers(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    rows = get_printers(db, skip=skip, limit=limit)
+    ws = getattr(current_user, "workspace_id", None)
+    if ws is None:
+        return {"printers": []}
+    rows = get_printers(db, skip=skip, limit=limit, workspace_id=ws)
     return {"printers": [_serialize(p) for p in rows]}
 
 
@@ -61,15 +64,17 @@ def add_printer(
     if mode not in {"manual", "snmp", "web", "ping"}:
         raise HTTPException(status_code=400, detail="connection_mode must be manual, snmp, web, or ping")
 
-    # Free-tier hard cap (pilot). Pro flag can raise this later without changing the path.
-    existing = get_printers(db, skip=0, limit=1000)
+    ws = getattr(current_user, "workspace_id", None)
+    if ws is None:
+        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
+    existing = get_printers(db, skip=0, limit=1000, workspace_id=ws)
     if len(existing) >= FREE_PRINTER_CAP:
         raise HTTPException(
             status_code=403,
             detail=f"Free plan allows up to {FREE_PRINTER_CAP} printers. Upgrade to Pro for a full office fleet.",
         )
 
-    created = create_printer(db, printer)
+    created = create_printer(db, printer, workspace_id=ws)
 
     # Cloud must never dial customer printer IPs (private LAN is unreachable from
     # Render; public/port-forward would still violate the trust model).
@@ -97,7 +102,7 @@ def get_printer_details(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    printer = get_printer(db, printer_id)
+    printer = get_printer(db, printer_id, workspace_id=getattr(current_user, "workspace_id", None))
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     return _serialize(printer)
@@ -110,7 +115,7 @@ def update_printer_endpoint(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    printer = get_printer(db, printer_id)
+    printer = get_printer(db, printer_id, workspace_id=getattr(current_user, "workspace_id", None))
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     data = updates.model_dump(exclude_unset=True) if hasattr(updates, "model_dump") else updates.dict(exclude_unset=True)
@@ -174,7 +179,7 @@ def list_status_checks(
     current_user: UserInDB = Depends(get_current_user),
 ):
     """Recent status checks for evidence trail (Goal 1 / Goal 2)."""
-    printer = get_printer(db, printer_id)
+    printer = get_printer(db, printer_id, workspace_id=getattr(current_user, "workspace_id", None))
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     limit = max(1, min(limit, 100))

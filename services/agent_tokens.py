@@ -29,6 +29,7 @@ def create_agent_token(
     *,
     created_by: str,
     name: str = "default",
+    workspace_id: int | None = None,
 ) -> Tuple[models.AgentToken, str]:
     """Returns (row, raw_token). Raw is only available at this moment."""
     raw = generate_raw_token()
@@ -38,6 +39,7 @@ def create_agent_token(
         token_prefix=raw[: PREFIX_LEN + 3],  # include tt_
         created_by=created_by,
         created_at=datetime.utcnow(),
+        workspace_id=workspace_id,
     )
     db.add(row)
     db.add(
@@ -100,9 +102,8 @@ def touch_last_used(db: Session, token: models.AgentToken) -> None:
     db.commit()
 
 
-def list_agent_tokens(db: Session):
-    return (
-        db.query(models.AgentToken)
-        .order_by(models.AgentToken.created_at.desc())
-        .all()
-    )
+def list_agent_tokens(db: Session, workspace_id: int | None = None):
+    q = db.query(models.AgentToken)
+    if workspace_id is not None:
+        q = q.filter(models.AgentToken.workspace_id == workspace_id)
+    return q.order_by(models.AgentToken.created_at.desc()).all()

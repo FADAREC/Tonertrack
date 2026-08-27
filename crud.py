@@ -6,16 +6,17 @@ from auth import get_password_hash
 
 
 def create_user(db: Session, user: UserCreate, role: str | None = None):
+    """Self-serve signup: new workspace, user is admin of that workspace only."""
     hashed_password = get_password_hash(user.password)
-    # First user becomes admin
-    if role is None:
-        count = db.query(models.User).count()
-        role = "admin" if count == 0 else "operator"
+    ws = models.Workspace(name=f"{user.username}'s office")
+    db.add(ws)
+    db.flush()
     db_user = models.User(
         username=user.username,
         email=user.email,
         hashed_password=hashed_password,
-        role=role,
+        role=role or "admin",
+        workspace_id=ws.id,
     )
     db.add(db_user)
     db.commit()
@@ -35,8 +36,10 @@ def get_users(db: Session):
     return db.query(models.User).all()
 
 
-def create_printer(db: Session, printer: PrinterCreate):
+def create_printer(db: Session, printer: PrinterCreate, workspace_id: int | None = None):
     data = printer.model_dump() if hasattr(printer, "model_dump") else printer.dict()
+    if workspace_id is not None:
+        data["workspace_id"] = workspace_id
     # Creation is not verification — clocks stay null until first status/toner write
     data["last_checked"] = None
     data["last_verified_at"] = None
@@ -67,12 +70,18 @@ def create_printer(db: Session, printer: PrinterCreate):
     return db_printer
 
 
-def get_printers(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(models.Printer).offset(skip).limit(limit).all()
+def get_printers(db: Session, skip: int = 0, limit: int = 100, workspace_id: int | None = None):
+    q = db.query(models.Printer)
+    if workspace_id is not None:
+        q = q.filter(models.Printer.workspace_id == workspace_id)
+    return q.offset(skip).limit(limit).all()
 
 
-def get_printer(db: Session, printer_id: int):
-    return db.query(models.Printer).filter(models.Printer.id == printer_id).first()
+def get_printer(db: Session, printer_id: int, workspace_id: int | None = None):
+    q = db.query(models.Printer).filter(models.Printer.id == printer_id)
+    if workspace_id is not None:
+        q = q.filter(models.Printer.workspace_id == workspace_id)
+    return q.first()
 
 
 def update_printer(db: Session, printer: models.Printer, updates: dict):
