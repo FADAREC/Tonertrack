@@ -100,12 +100,18 @@ def issue_token(
     current_user: UserInDB = Depends(get_current_user),
 ):
     _require_admin(current_user)
-    row, raw = create_agent_token(
-        db,
-        created_by=current_user.username,
-        name=body.name,
-        workspace_id=getattr(current_user, "workspace_id", None),
-    )
+    ws = getattr(current_user, "workspace_id", None)
+    if ws is None:
+        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
+    try:
+        row, raw = create_agent_token(
+            db,
+            created_by=current_user.username,
+            name=body.name,
+            workspace_id=ws,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return {
         "token": _public_token(row),
         "raw_token": raw,
@@ -132,7 +138,12 @@ def revoke_token(
     current_user: UserInDB = Depends(get_current_user),
 ):
     _require_admin(current_user)
-    row = revoke_agent_token(db, token_id, revoked_by=current_user.username)
+    row = revoke_agent_token(
+        db,
+        token_id,
+        revoked_by=current_user.username,
+        workspace_id=getattr(current_user, "workspace_id", None),
+    )
     if not row:
         raise HTTPException(status_code=404, detail="Token not found")
     return _public_token(row)
@@ -251,10 +262,13 @@ def enable_helper_download(
 ):
     """Admin grants helper download for this token."""
     _require_admin(current_user)
+    ws = getattr(current_user, "workspace_id", None)
+    if ws is None:
+        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
     row = (
         db.query(models.AgentToken)
         .filter(models.AgentToken.id == token_id)
-        .filter(models.AgentToken.workspace_id == getattr(current_user, "workspace_id", None))
+        .filter(models.AgentToken.workspace_id == ws)
         .first()
     )
     if not row:
@@ -332,12 +346,18 @@ def quick_setup_helper(
 ):
     """Create access key, enable download, return raw key once."""
     _require_admin(current_user)
-    row, raw = create_agent_token(
-        db,
-        created_by=current_user.username,
-        name="office-checker",
-        workspace_id=getattr(current_user, "workspace_id", None),
-    )
+    ws = getattr(current_user, "workspace_id", None)
+    if ws is None:
+        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
+    try:
+        row, raw = create_agent_token(
+            db,
+            created_by=current_user.username,
+            name="office-checker",
+            workspace_id=ws,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     row.helper_download_enabled = True
     db.add(row)
     db.add(

@@ -71,17 +71,26 @@ def create_printer(db: Session, printer: PrinterCreate, workspace_id: int | None
 
 
 def get_printers(db: Session, skip: int = 0, limit: int = 100, workspace_id: int | None = None):
-    q = db.query(models.Printer)
-    if workspace_id is not None:
-        q = q.filter(models.Printer.workspace_id == workspace_id)
-    return q.offset(skip).limit(limit).all()
+    if workspace_id is None:
+        return []
+    return (
+        db.query(models.Printer)
+        .filter(models.Printer.workspace_id == workspace_id)
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
 
 
 def get_printer(db: Session, printer_id: int, workspace_id: int | None = None):
-    q = db.query(models.Printer).filter(models.Printer.id == printer_id)
-    if workspace_id is not None:
-        q = q.filter(models.Printer.workspace_id == workspace_id)
-    return q.first()
+    if workspace_id is None:
+        return None
+    return (
+        db.query(models.Printer)
+        .filter(models.Printer.id == printer_id)
+        .filter(models.Printer.workspace_id == workspace_id)
+        .first()
+    )
 
 
 def update_printer(db: Session, printer: models.Printer, updates: dict):
@@ -103,8 +112,8 @@ def update_printer(db: Session, printer: models.Printer, updates: dict):
     return printer
 
 
-def delete_printer(db: Session, printer_id: int):
-    printer = get_printer(db, printer_id)
+def delete_printer(db: Session, printer_id: int, workspace_id: int | None = None):
+    printer = get_printer(db, printer_id, workspace_id=workspace_id)
     if printer:
         db.delete(printer)
         db.commit()

@@ -32,6 +32,8 @@ def create_agent_token(
     workspace_id: int | None = None,
 ) -> Tuple[models.AgentToken, str]:
     """Returns (row, raw_token). Raw is only available at this moment."""
+    if workspace_id is None:
+        raise ValueError("workspace_id is required to create an access key")
     raw = generate_raw_token()
     row = models.AgentToken(
         name=name or "default",
@@ -60,8 +62,16 @@ def revoke_agent_token(
     token_id: int,
     *,
     revoked_by: str,
+    workspace_id: int | None = None,
 ) -> Optional[models.AgentToken]:
-    row = db.query(models.AgentToken).filter(models.AgentToken.id == token_id).first()
+    if workspace_id is None:
+        return None
+    row = (
+        db.query(models.AgentToken)
+        .filter(models.AgentToken.id == token_id)
+        .filter(models.AgentToken.workspace_id == workspace_id)
+        .first()
+    )
     if not row:
         return None
     if row.revoked_at is not None:
@@ -103,7 +113,12 @@ def touch_last_used(db: Session, token: models.AgentToken) -> None:
 
 
 def list_agent_tokens(db: Session, workspace_id: int | None = None):
-    q = db.query(models.AgentToken)
-    if workspace_id is not None:
-        q = q.filter(models.AgentToken.workspace_id == workspace_id)
-    return q.order_by(models.AgentToken.created_at.desc()).all()
+    # Fail closed: no workspace => no keys (never list the whole table)
+    if workspace_id is None:
+        return []
+    return (
+        db.query(models.AgentToken)
+        .filter(models.AgentToken.workspace_id == workspace_id)
+        .order_by(models.AgentToken.created_at.desc())
+        .all()
+    )

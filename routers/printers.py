@@ -149,7 +149,7 @@ def delete_printer_endpoint(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    if not delete_printer(db, printer_id):
+    if not delete_printer(db, printer_id, workspace_id=getattr(current_user, "workspace_id", None)):
         raise HTTPException(status_code=404, detail="Printer not found")
     return {"detail": "Printer deleted"}
 
