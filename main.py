@@ -203,7 +203,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = get_user_by_login(db, form_data.username.strip())
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Wrong username or password.")
-    role = getattr(user, "role", None) or "operator"
+    role = getattr(user, "role", None) or "admin"
     access_token = create_access_token(
         data={"sub": user.username, "email": user.email, "role": role}
     )
