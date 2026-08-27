@@ -13,6 +13,37 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+function clearSessionAndGoToLogin() {
+  localStorage.removeItem('token');
+  localStorage.removeItem('role');
+  localStorage.removeItem('trust_mode');
+  window.dispatchEvent(new Event('tonertrack:session-expired'));
+  // Hard navigation so any stuck dashboard state resets to the login screen
+  if (!window.location.pathname.includes('login')) {
+    const base = window.location.pathname.startsWith('/') ? '/' : '/';
+    if (window.location.pathname !== '/' || window.location.hash) {
+      window.location.assign('/');
+    } else {
+      window.location.reload();
+    }
+  }
+}
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    const url = String(error?.config?.url || '');
+    // Do not bounce login/register failures into a logout loop
+    const isAuthForm =
+      url.includes('/login') || url.includes('/register');
+    if (status === 401 && !isAuthForm) {
+      clearSessionAndGoToLogin();
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authAPI = {
   login: (username: string, password: string) =>
     api.post('/login', new URLSearchParams({ username, password }).toString(), {

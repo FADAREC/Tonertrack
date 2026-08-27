@@ -47,8 +47,13 @@ function App() {
   // Re-read token after login (auth does full reload currently; keep state path too)
   useEffect(() => {
     const onStorage = () => setToken(localStorage.getItem('token'));
+    const onExpired = () => setToken(null);
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener('tonertrack:session-expired', onExpired);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('tonertrack:session-expired', onExpired);
+    };
   }, []);
 
   if (!token) {
