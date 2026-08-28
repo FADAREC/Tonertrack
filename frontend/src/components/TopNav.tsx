@@ -7,20 +7,20 @@ const TopNav: React.FC<{
   toggleSidebar: () => void;
 }> = ({ toggleSidebar }) => {
   return (
-    <header className="h-14 border-b-2 border-[#111] bg-[#f4f1ea] flex items-center px-3 sm:px-4 gap-3 shrink-0 sticky top-0 z-20">
+    <header className="h-14 border-b border-white/10 bg-[#24272b] flex items-center px-3 sm:px-4 gap-3 shrink-0 sticky top-0 z-20">
       <button
         type="button"
         onClick={toggleSidebar}
-        className="p-2 border-2 border-[#111] bg-white shadow-[2px_2px_0_#111] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+        className="p-2.5 rounded-md text-[#9aa0a8] hover:bg-white/5 hover:text-[#e8eaed]"
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
       </button>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold tracking-tight truncate md:hidden">TonerTrack</p>
+        <p className="tt-display text-base tracking-wide truncate md:hidden">TonerTrack</p>
       </div>
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-[#5c5c5c] hidden sm:inline">
-        Fleet board
+      <span className="text-[11px] font-medium uppercase tracking-wider text-[#9aa0a8] hidden sm:inline">
+        Fleet
       </span>
     </header>
   );

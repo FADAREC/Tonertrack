@@ -8,31 +8,31 @@ const Sidebar: React.FC<{
   toggleSidebar: () => void;
 }> = ({ isOpen, toggleSidebar }) => {
   const linkCls = ({ isActive }: { isActive: boolean }) =>
-    `flex items-center gap-3 px-3 py-3 text-sm font-semibold border-2 transition ${
+    `flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-md transition ${
       isActive
-        ? 'bg-[#111] text-[#f4f1ea] border-[#111]'
-        : 'bg-white text-[#111] border-transparent hover:border-[#111]'
+        ? 'bg-[#2c3036] text-[#e8eaed] border border-white/10'
+        : 'text-[#9aa0a8] hover:text-[#e8eaed] hover:bg-white/5 border border-transparent'
     }`;
 
   const nav = (
     <>
-      <div className="h-14 px-4 flex items-center justify-between border-b-2 border-[#111]">
+      <div className="h-14 px-4 flex items-center justify-between border-b border-white/10">
         <div className="flex items-center gap-2.5">
-          <div className="h-8 w-8 border-2 border-[#111] bg-[#111] text-[#f4f1ea] flex items-center justify-center text-xs font-black">
+          <div className="h-8 w-8 rounded-md bg-[#e8eaed] text-[#1a1c1f] flex items-center justify-center text-xs font-bold">
             T
           </div>
-          <span className="font-black tracking-tight text-lg">TonerTrack</span>
+          <span className="tt-display text-lg tracking-wide">TonerTrack</span>
         </div>
         <button
           type="button"
           onClick={toggleSidebar}
-          className="md:hidden p-2 border-2 border-[#111] bg-white"
+          className="md:hidden p-2 text-[#9aa0a8]"
           aria-label="Close menu"
         >
           <X className="h-5 w-5" />
         </button>
       </div>
-      <nav className="flex-1 p-3 space-y-2">
+      <nav className="flex-1 p-3 space-y-1">
         <NavLink to="/" end className={linkCls} onClick={() => window.innerWidth < 768 && toggleSidebar()}>
           <LayoutGrid className="h-4 w-4" /> Fleet
         </NavLink>
@@ -43,10 +43,10 @@ const Sidebar: React.FC<{
           <Activity className="h-4 w-4" /> Office checker
         </NavLink>
       </nav>
-      <div className="p-3 border-t-2 border-[#111]">
+      <div className="p-3 border-t border-white/10">
         <button
           type="button"
-          className="flex items-center gap-3 px-3 py-3 text-sm font-semibold w-full border-2 border-transparent hover:border-[#111] bg-white"
+          className="flex items-center gap-3 px-3 py-3 text-sm font-medium w-full text-[#9aa0a8] hover:text-[#e8eaed] rounded-md hover:bg-white/5"
           onClick={() => {
             localStorage.removeItem('token');
             localStorage.removeItem('role');
@@ -69,7 +69,7 @@ const Sidebar: React.FC<{
         {nav}
       </aside>
       <aside
-        className={`hidden md:flex flex-col w-64 shrink-0 border-r-2 border-[#111] bg-white ${isOpen ? '' : 'md:hidden'}`}
+        className={`hidden md:flex flex-col w-60 shrink-0 border-r border-white/10 bg-[#24272b] ${isOpen ? '' : 'md:hidden'}`}
       >
         {nav}
       </aside>

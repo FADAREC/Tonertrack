@@ -24,24 +24,18 @@ interface PrinterRow {
   fail_streak?: number;
 }
 
-function statusLabel(p: PrinterRow): { text: string; color: string; bg: string } {
-  if (p.status_detail === 'unreachable' || (p.stale && p.status === 'unknown')) {
-    return { text: p.stale ? 'Stale' : 'Unreachable', color: 'text-[#111]', bg: 'bg-[#e8e4dc]' };
-  }
-  if (p.stale || p.status === 'unknown') {
-    return { text: 'Unknown', color: 'text-[#111]', bg: 'bg-[#e8e4dc]' };
-  }
+function statusLabel(p: PrinterRow): { text: string; kind: string } {
+  if (p.status === 'offline') return { text: 'Offline', kind: 'crit' };
+  if (p.stale) return { text: 'Needs check', kind: 'warn' };
   if (p.status === 'low' || (p.toner_level != null && p.toner_level <= 20)) {
-    return { text: 'Low toner', color: 'text-[#9a6b00]', bg: 'bg-[#ffe9b0]' };
-  }
-  if (p.status === 'offline') {
-    return { text: 'Offline', color: 'text-[#c41218]', bg: 'bg-[#ffd6d6]' };
+    return { text: 'Low toner', kind: 'warn' };
   }
   if (p.status === 'online' || p.status === 'ok') {
-    return { text: 'Online', color: 'text-[#1a7f4b]', bg: 'bg-[#d8f5e6]' };
+    return { text: 'Verified', kind: 'ok' };
   }
-  return { text: 'Unknown', color: 'text-[#111]', bg: 'bg-[#e8e4dc]' };
+  return { text: 'Unknown', kind: 'muted' };
 }
+
 
 function ageText(p: PrinterRow): string {
   if (p.status_note) return p.status_note;
@@ -57,19 +51,52 @@ function ageText(p: PrinterRow): string {
   return `Checked ${Math.round(d)} days ago`;
 }
 
-function tonerColor(level: number | null): string {
-  if (level == null) return 'bg-[#999]';
-  if (level <= 20) return 'bg-[#c41218]';
-  if (level <= 40) return 'bg-[#9a6b00]';
-  return 'bg-[#1a7f4b]';
+function cmykLevels(p: PrinterRow): { c: number | null; m: number | null; y: number | null; k: number | null } {
+  // Single reported level maps to K until multi-cartridge data exists
+  const k = p.toner_level;
+  return { c: null, m: null, y: null, k };
 }
 
+
 function rowTone(p: PrinterRow): string {
+  if (p.status === 'offline') return 'tt-card-critical';
   if (!p.stale && (p.status === 'low' || (p.toner_level != null && p.toner_level <= 20))) return 'tt-card-attention';
   if (p.stale || p.status === 'unknown') return 'tt-card-stale';
   if (!p.stale && (p.status === 'online' || p.status === 'ok')) return 'tt-card-live';
   return '';
 }
+
+function CmykBars({ p }: { p: PrinterRow }) {
+  const levels = cmykLevels(p);
+  const rows: { key: 'c' | 'm' | 'y' | 'k'; label: string; cls: string }[] = [
+    { key: 'c', label: 'C', cls: 'c' },
+    { key: 'm', label: 'M', cls: 'm' },
+    { key: 'y', label: 'Y', cls: 'y' },
+    { key: 'k', label: 'K', cls: 'k' },
+  ];
+  return (
+    <div className="tt-cmyk" title={p.toner_level != null ? `Black ${p.toner_level}% (reported)` : 'No toner reading'}>
+      {rows.map((r) => {
+        const v = levels[r.key];
+        return (
+          <div key={r.key} className="tt-cmyk-row">
+            <span className="tt-cmyk-label">{r.label}</span>
+            <div className="tt-cmyk-track">
+              <div
+                className={`tt-cmyk-fill ${r.cls}`}
+                style={{
+                  width: v != null ? `${Math.max(0, Math.min(100, v))}%` : '0%',
+                  opacity: v != null ? 1 : 0.25,
+                }}
+              />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 
 const FleetHome: React.FC<{ darkMode: boolean }> = () => {
   const [printers, setPrinters] = useState<PrinterRow[]>([]);
@@ -260,20 +287,20 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
             icon: Activity,
             kind: printers.length && freshnessPct >= 90 ? 'live' : printers.length ? 'warn' : 'plain',
           },
-          { label: 'Low toner', value: lowCount, icon: AlertTriangle, kind: lowCount > 0 ? 'danger' : 'plain' },
+          { label: 'Low toner', value: lowCount, icon: AlertTriangle, kind: lowCount > 0 ? 'warn' : 'plain' },
           { label: 'Needs check', value: staleCount, icon: HelpCircle, kind: staleCount > 0 ? 'warn' : 'plain' },
         ].map(({ label, value, icon: Icon, kind }) => (
           <div
             key={label}
             className={`tt-card px-4 py-3 ${
-              kind === 'danger' ? 'tt-card-attention' : kind === 'live' ? 'tt-card-live' : ''
+              kind === 'danger' ? 'tt-card-critical' : kind === 'warn' ? 'tt-card-attention' : kind === 'live' ? 'tt-card-live' : ''
             }`}
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs text-[#8b9bb8]">{label}</span>
               <Icon className="h-3.5 w-3.5 text-[#8b9bb8]" />
             </div>
-            <p className="text-2xl font-semibold tabular-nums tracking-tight">{loading ? '…' : value}</p>
+            <p className="tt-lcd text-2xl">{loading ? '…' : value}</p>
           </div>
         ))}
       </div>
@@ -404,7 +431,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
 
                 <div className="flex flex-wrap items-center gap-3">
                   <span
-                    className={`text-[11px] font-bold px-2 py-1 border-2 border-[#111] rounded-none inline-flex items-center gap-1.5 ${st.bg} ${st.color}`}
+                    className={`tt-status-pill tt-status-${st.kind}`}
                   >
                     {(p.status === 'online' || p.status === 'ok') && !p.stale && (
                       <span className="tt-status-dot tt-status-dot-online" aria-hidden />
@@ -416,12 +443,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                   </span>
 
                   <div className="flex items-center gap-2 min-w-[7rem]">
-                    <div className="tt-toner-track">
-                      <div
-                        className={`tt-toner-fill ${tonerColor(p.toner_level)}`}
-                        style={{ width: p.toner_level != null ? `${p.toner_level}%` : '0%' }}
-                      />
-                    </div>
+                    <CmykBars p={p} />
                     {isEditing ? (
                       <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                         <input
@@ -450,9 +472,9 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                           setEditingId(p.id);
                           setTonerDraft(p.toner_level != null ? String(p.toner_level) : '');
                         }}
-                        className="text-xs tabular-nums text-[#f2f5ff] hover:text-white"
+                        className="text-xs tt-lcd text-[#e8eaed] hover:text-white"
                       >
-                        {p.toner_level != null ? `${p.toner_level}%` : 'n/a'}
+                        {p.toner_level != null ? `${p.toner_level}%` : '—'}
                       </button>
                     )}
                   </div>

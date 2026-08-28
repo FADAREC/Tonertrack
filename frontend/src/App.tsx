@@ -58,7 +58,7 @@ function App() {
 
   if (!token) {
     return (
-      <div className={`min-h-screen flex items-center justify-center tt-app-shell text-[#111]`}>
+      <div className={`min-h-screen flex items-center justify-center tt-app-shell text-[#e8eaed]`}>
         <div className="w-full max-w-md p-6">
           <Auth
             darkMode={darkMode}
@@ -71,7 +71,7 @@ function App() {
 
   if (trustReady === null) {
     return (
-      <div className={`min-h-screen flex items-center justify-center tt-app-shell text-[#111]`}>
+      <div className={`min-h-screen flex items-center justify-center tt-app-shell text-[#e8eaed]`}>
         <p className="opacity-60">Loading…</p>
       </div>
     );
@@ -83,11 +83,11 @@ function App() {
 
   return (
     <Router>
-      <div className={`min-h-screen tt-app-shell text-[#111]`}>
+      <div className={`min-h-screen tt-app-shell text-[#e8eaed]`}>
         <Toaster
           position="bottom-center"
           toastOptions={{
-            style: { background: '#ffffff', color: '#111111', border: '2px solid #111111', boxShadow: '3px 3px 0 #111111', borderRadius: '2px' },
+            style: { background: '#24272b', color: '#e8eaed', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '6px' },
           }}
         />
         <div className="flex h-screen overflow-hidden">
