@@ -34,7 +34,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
   const [loading, setLoading] = useState(false);
 
   const inputCls =
-    'w-full pl-10 p-3 rounded-xl border bg-white/5 border-white/20 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-[rgba(57,255,136,0.35)]';
+    'w-full pl-10 p-3 border-2 border-[#111] bg-white text-[#111] placeholder-[#5c5c5c] focus:outline-none focus:shadow-[2px_2px_0_#111]';
 
   const finishLogin = (accessToken: string, role?: string) => {
     localStorage.setItem('token', accessToken);
@@ -104,13 +104,13 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#39ff88] text-[#0b132b] text-sm font-bold">T</div>
+        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#111] text-[#f4f1ea] text-sm font-bold">T</div>
         <h1 className="text-xl font-semibold tracking-tight text-zinc-50">TonerTrack</h1>
         <p className="text-sm text-zinc-500">Office printer status in one place</p>
       </div>
     <form onSubmit={handleSubmit} className="space-y-5 bg-[#121214] rounded-2xl p-8 border border-white/10">
       <div className="text-center">
-        <h2 className="text-lg font-semibold text-white mb-1">{isRegister ? 'Create account' : 'Sign in'}</h2>
+        <h2 className="text-lg font-semibold text-[#111] mb-1">{isRegister ? 'Create account' : 'Sign in'}</h2>
         <p className="text-zinc-500 text-sm">
           {isRegister ? 'The first account is the admin for this office.' : 'Username and password.'}
         </p>
@@ -118,7 +118,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
 
       <div className="space-y-3">
         <div className="relative">
-          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+          <User className="absolute left-3 top-1/2 -translate-y-1/2 text-[#111]/40 h-5 w-5" />
           <input
             type="text"
             value={username}
@@ -133,7 +133,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
 
         {isRegister && (
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-[#111]/40 h-5 w-5" />
             <input
               type="email"
               value={email}
@@ -147,7 +147,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
         )}
 
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#111]/40 h-5 w-5" />
           <input
             type="password"
             value={password}
@@ -162,7 +162,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
 
         {isRegister && (
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 h-5 w-5" />
+            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-[#111]/40 h-5 w-5" />
             <input
               type="password"
               value={confirm}
@@ -191,7 +191,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-[#39ff88] hover:brightness-110 text-[#0b132b] disabled:opacity-50 text-white p-3 rounded-xl font-medium transition"
+        className="w-full tt-btn tt-btn-primary w-full disabled:opacity-50 text-[#111] p-3 rounded-xl font-medium transition"
       >
         <ArrowRight className="inline h-5 w-5 mr-2" />
         {loading ? (isRegister ? 'Creating…' : 'Signing in…') : isRegister ? 'Create account' : 'Sign in'}

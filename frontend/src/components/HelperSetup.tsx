@@ -132,12 +132,12 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       </div>
 
       {rawOnce && (
-        <div className="tt-card p-4 border border-amber-500/30">
-          <p className="text-xs text-amber-200/90 mb-2 font-medium">
+        <div className="tt-card p-4 border-2 border-[#111]">
+          <p className="text-xs text-[#9a6b00] mb-2 font-medium">
             Save this key. It will not be shown again. Download the Windows starter while you still have it.
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 text-xs break-all bg-black/40 rounded-lg px-3 py-2 text-[#f2f5ff]">
+            <code className="flex-1 text-xs break-all bg-[#e8e4dc] border-2 border-[#111] px-3 py-2 text-[#f2f5ff]">
               {rawOnce}
             </code>
             <button type="button" onClick={copyRaw} className="tt-btn tt-btn-ghost shrink-0">

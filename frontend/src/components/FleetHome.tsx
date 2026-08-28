@@ -26,21 +26,21 @@ interface PrinterRow {
 
 function statusLabel(p: PrinterRow): { text: string; color: string; bg: string } {
   if (p.status_detail === 'unreachable' || (p.stale && p.status === 'unknown')) {
-    return { text: p.stale ? 'Stale' : 'Unreachable', color: 'text-zinc-300', bg: 'bg-zinc-500/15' };
+    return { text: p.stale ? 'Stale' : 'Unreachable', color: 'text-[#111]', bg: 'bg-[#e8e4dc]' };
   }
   if (p.stale || p.status === 'unknown') {
-    return { text: 'Unknown', color: 'text-zinc-300', bg: 'bg-zinc-500/15' };
+    return { text: 'Unknown', color: 'text-[#111]', bg: 'bg-[#e8e4dc]' };
   }
   if (p.status === 'low' || (p.toner_level != null && p.toner_level <= 20)) {
-    return { text: 'Low toner', color: 'text-[#ffb14a]', bg: 'bg-[rgba(255,177,74,0.12)]' };
+    return { text: 'Low toner', color: 'text-[#9a6b00]', bg: 'bg-[#ffe9b0]' };
   }
   if (p.status === 'offline') {
-    return { text: 'Offline', color: 'text-red-300', bg: 'bg-red-500/15' };
+    return { text: 'Offline', color: 'text-[#c41218]', bg: 'bg-[#ffd6d6]' };
   }
   if (p.status === 'online' || p.status === 'ok') {
-    return { text: 'Online', color: 'text-[#39ff88]', bg: 'bg-[rgba(57,255,136,0.12)]' };
+    return { text: 'Online', color: 'text-[#1a7f4b]', bg: 'bg-[#d8f5e6]' };
   }
-  return { text: 'Unknown', color: 'text-zinc-300', bg: 'bg-zinc-500/15' };
+  return { text: 'Unknown', color: 'text-[#111]', bg: 'bg-[#e8e4dc]' };
 }
 
 function ageText(p: PrinterRow): string {
@@ -58,10 +58,10 @@ function ageText(p: PrinterRow): string {
 }
 
 function tonerColor(level: number | null): string {
-  if (level == null) return 'bg-zinc-600';
-  if (level <= 20) return 'bg-[#ff2e3a]';
-  if (level <= 40) return 'bg-[#ffb14a]';
-  return 'bg-[#39ff88]';
+  if (level == null) return 'bg-[#999]';
+  if (level <= 20) return 'bg-[#c41218]';
+  if (level <= 40) return 'bg-[#9a6b00]';
+  return 'bg-[#1a7f4b]';
 }
 
 function rowTone(p: PrinterRow): string {
@@ -404,7 +404,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
 
                 <div className="flex flex-wrap items-center gap-3">
                   <span
-                    className={`text-[11px] font-medium px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 ${st.bg} ${st.color}`}
+                    className={`text-[11px] font-bold px-2 py-1 border-2 border-[#111] rounded-none inline-flex items-center gap-1.5 ${st.bg} ${st.color}`}
                   >
                     {(p.status === 'online' || p.status === 'ok') && !p.stale && (
                       <span className="tt-status-dot tt-status-dot-online" aria-hidden />
