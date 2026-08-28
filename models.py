@@ -86,10 +86,12 @@ class Alert(Base):
 
 
 class Setting(Base):
+    """Per-workspace config. Unique on (workspace_id, key)."""
     __tablename__ = "settings"
 
     id = Column(Integer, primary_key=True, index=True)
-    key = Column(String, unique=True, index=True, nullable=False)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
+    key = Column(String, index=True, nullable=False)
     value = Column(String, default="")
 
 
@@ -136,6 +138,7 @@ class AuditEvent(Base):
     __tablename__ = "audit_events"
 
     id = Column(Integer, primary_key=True, index=True)
+    workspace_id = Column(Integer, ForeignKey("workspaces.id"), nullable=True, index=True)
     action = Column(String, nullable=False, index=True)
     actor = Column(String, nullable=False)
     detail = Column(String, default="")

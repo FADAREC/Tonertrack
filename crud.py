@@ -32,8 +32,14 @@ def get_user_by_login(db: Session, login: str):
     )
 
 
-def get_users(db: Session):
-    return db.query(models.User).all()
+def get_users(db: Session, workspace_id: int | None = None):
+    if workspace_id is None:
+        return []
+    return (
+        db.query(models.User)
+        .filter(models.User.workspace_id == workspace_id)
+        .all()
+    )
 
 
 def create_printer(db: Session, printer: PrinterCreate, workspace_id: int | None = None):
@@ -152,7 +158,7 @@ def create_job(db: Session, job: JobCreate):
 
 
 def get_jobs(db: Session):
-    return db.query(models.Job).all()
+    return []  # jobs not used; do not leak cross-tenant
 
 
 def create_alert(db: Session, alert: AlertCreate):
@@ -164,20 +170,33 @@ def create_alert(db: Session, alert: AlertCreate):
 
 
 def get_alerts(db: Session):
-    return db.query(models.Alert).all()
+    return []  # alerts table legacy; do not leak cross-tenant
 
 
-def get_setting(db: Session, key: str):
-    return db.query(models.Setting).filter(models.Setting.key == key).first()
+def get_setting(db: Session, key: str, workspace_id: int | None = None):
+    if workspace_id is None:
+        return None
+    return (
+        db.query(models.Setting)
+        .filter(models.Setting.key == key)
+        .filter(models.Setting.workspace_id == workspace_id)
+        .first()
+    )
 
 
-def update_setting(db: Session, key: str, value: str):
-    setting = get_setting(db, key)
+def update_setting(db: Session, key: str, value: str, workspace_id: int | None = None):
+    if workspace_id is None:
+        raise ValueError("workspace_id is required for settings")
+    setting = get_setting(db, key, workspace_id=workspace_id)
     if not setting:
-        setting = models.Setting(key=key, value=value)
+        setting = models.Setting(key=key, value=value, workspace_id=workspace_id)
         db.add(setting)
     else:
         setting.value = value
     db.commit()
     db.refresh(setting)
     return setting
+
+def set_setting(db: Session, key: str, value: str, workspace_id: int | None = None):
+    return update_setting(db, key, value, workspace_id=workspace_id)
+

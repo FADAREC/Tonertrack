@@ -183,7 +183,7 @@ def agent_config(
     agent: models.AgentToken = Depends(get_agent_from_header),
 ):
     """Poll frequency the local helper should use."""
-    seconds = get_poll_interval_seconds(db)
+    seconds = get_poll_interval_seconds(db, workspace_id=getattr(agent, "workspace_id", None))
     touch_last_used(db, agent)
     return {
         "poll_interval_seconds": seconds,
@@ -220,7 +220,8 @@ def get_poll_config_admin(
     current_user: UserInDB = Depends(get_current_user),
 ):
     """Admin/operator: read poll interval for the dashboard UI."""
-    seconds = get_poll_interval_seconds(db)
+    ws = getattr(current_user, "workspace_id", None)
+    seconds = get_poll_interval_seconds(db, workspace_id=ws)
     return {
         "poll_interval_seconds": seconds,
         "allowed_intervals_seconds": sorted(ALLOWED_POLL_INTERVALS),
@@ -236,8 +237,11 @@ def set_poll_config_admin(
 ):
     """Admin: set how often the office helper should poll."""
     _require_admin(current_user)
+    ws = getattr(current_user, "workspace_id", None)
+    if ws is None:
+        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
     try:
-        seconds = set_poll_interval_seconds(db, body.poll_interval_seconds)
+        seconds = set_poll_interval_seconds(db, body.poll_interval_seconds, workspace_id=ws)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     db.add(models.AuditEvent(
@@ -245,6 +249,7 @@ def set_poll_config_admin(
         actor=current_user.username,
         detail=f"poll_interval_seconds={seconds}",
         created_at=datetime.utcnow(),
+        workspace_id=ws,
     ))
     db.commit()
     return {

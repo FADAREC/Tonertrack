@@ -50,6 +50,7 @@ def create_agent_token(
             actor=created_by,
             detail=f"name={row.name} prefix={row.token_prefix}",
             created_at=datetime.utcnow(),
+            workspace_id=workspace_id,
         )
     )
     db.commit()
@@ -85,6 +86,7 @@ def revoke_agent_token(
             actor=revoked_by,
             detail=f"id={row.id} prefix={row.token_prefix}",
             created_at=datetime.utcnow(),
+            workspace_id=row.workspace_id,
         )
     )
     db.commit()

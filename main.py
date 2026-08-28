@@ -246,8 +246,9 @@ def refresh(token: str = Depends(oauth2_scheme)):
 def list_users(db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
-    users = get_users(db)
-    return [{"username": u.username, "email": u.email, "role": getattr(u, "role", "operator")} for u in users]
+    ws = getattr(current_user, "workspace_id", None)
+    users = get_users(db, workspace_id=ws)
+    return [{"username": u.username, "email": u.email, "role": getattr(u, "role", "admin")} for u in users]
 
 
 
@@ -268,7 +269,7 @@ def record_site_visit(path: str = "/") -> None:
 
 @app.get("/stats/visits", summary="How many people opened the site?")
 def visit_stats(db: Session = Depends(get_db), current_user: UserInDB = Depends(get_current_user)):
-    """Admin: page-loads vs /health uptime pings."""
+    """Deploy-level traffic counters (not per-office). Admin only."""
     if getattr(current_user, "role", None) != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
     from sqlalchemy import func as sa_func
