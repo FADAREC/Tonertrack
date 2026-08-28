@@ -13,7 +13,6 @@ from services.printer_status import (
     serialize_status_fields,
     STALE_AFTER_DAYS,
 )
-import models
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/printers", tags=["printers"])
