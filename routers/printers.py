@@ -6,7 +6,8 @@ import logging
 from schemas import PrinterCreate, PrinterUpdate, PrinterResponse, PrinterList, ScanRequest
 from database import get_db
 from auth import get_current_user, UserInDB
-from crud import create_printer, get_printers, get_printer, update_printer, delete_printer
+from crud import create_printer, get_printers, get_printer, update_printer, delete_printer, ensure_user_workspace
+import models
 from services.printer_status import (
     apply_human_status,
     serialize_status_fields,
@@ -64,9 +65,20 @@ def add_printer(
     if mode not in {"manual", "snmp", "web", "ping"}:
         raise HTTPException(status_code=400, detail="connection_mode must be manual, snmp, web, or ping")
 
-    ws = getattr(current_user, "workspace_id", None)
-    if ws is None:
-        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
+    db_user = (
+        db.query(models.User)
+        .filter(models.User.username == current_user.username)
+        .first()
+    )
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    try:
+        ws = ensure_user_workspace(db, db_user)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not set up your office. Sign out, sign in again, or contact support.",
+        )
     existing = get_printers(db, skip=0, limit=1000, workspace_id=ws)
     if len(existing) >= FREE_PRINTER_CAP:
         raise HTTPException(

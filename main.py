@@ -53,6 +53,20 @@ except Exception as _mig_err:
     import logging
     logging.getLogger("uvicorn.error").warning("Alembic upgrade skipped: %s", _mig_err)
 
+# Backfill: any user without an office gets one (deploy lag / old rows)
+try:
+    from database import SessionLocal
+    from crud import ensure_user_workspace
+    _db = SessionLocal()
+    try:
+        for _u in _db.query(models.User).filter(models.User.workspace_id.is_(None)).all():
+            ensure_user_workspace(_db, _u)
+    finally:
+        _db.close()
+except Exception as _ws_err:
+    import logging
+    logging.getLogger("uvicorn.error").warning("Workspace backfill skipped: %s", _ws_err)
+
 app = FastAPI(
     title="TonerTrack",
     version="1.0.0",

@@ -5,6 +5,23 @@ from schemas import PrinterCreate, UserCreate, JobCreate, AlertCreate
 from auth import get_password_hash
 
 
+def ensure_user_workspace(db: Session, user: models.User) -> int:
+    """Guarantee user has a workspace; create one if missing. Returns workspace id."""
+    if user.workspace_id is not None:
+        return int(user.workspace_id)
+    ws = models.Workspace(name=f"{user.username}'s office")
+    db.add(ws)
+    db.flush()
+    user.workspace_id = ws.id
+    if not user.role or user.role == "operator":
+        user.role = "admin"
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    return int(user.workspace_id)
+
+
+
 def create_user(db: Session, user: UserCreate, role: str | None = None):
     """Self-serve signup: new workspace, user is admin of that workspace only."""
     hashed_password = get_password_hash(user.password)

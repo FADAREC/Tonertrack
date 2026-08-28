@@ -77,23 +77,17 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         row = db.query(models.User).filter(models.User.username == username).first()
         if not row:
             raise credentials_exception
-        # Safety net: older rows may lack workspace_id after deploy lag
-        if row.workspace_id is None:
-            ws = models.Workspace(name=f"{row.username}'s office")
-            db.add(ws)
-            db.flush()
-            row.workspace_id = ws.id
-            if not row.role or row.role == "operator":
-                # self-serve owners should administer their own office
-                row.role = "admin"
-            db.add(row)
-            db.commit()
-            db.refresh(row)
+        from crud import ensure_user_workspace
+        try:
+            ws_id = ensure_user_workspace(db, row)
+        except Exception:
+            # Last resort: still reject empty workspace rather than leak global data
+            ws_id = getattr(row, "workspace_id", None)
         return UserInDB(
             username=row.username,
             email=row.email or "",
             role=row.role or "admin",
-            workspace_id=row.workspace_id,
+            workspace_id=ws_id,
         )
     finally:
         db.close()
