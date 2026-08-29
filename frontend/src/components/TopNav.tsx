@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 
 const TopNav: React.FC<{
@@ -11,17 +12,28 @@ const TopNav: React.FC<{
       <button
         type="button"
         onClick={toggleSidebar}
-        className="p-2.5 rounded-md text-[#9aa0a8] hover:bg-white/5 hover:text-[#e8eaed]"
+        className="p-2.5 rounded-md text-[#9aa0a8] hover:bg-white/5 hover:text-[#e8eaed] md:hidden"
         aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
       </button>
-      <div className="flex-1 min-w-0">
-        <p className="tt-display text-base tracking-wide truncate md:hidden">TonerTrack</p>
-      </div>
-      <span className="text-[11px] font-medium uppercase tracking-wider text-[#9aa0a8] hidden sm:inline">
-        Fleet
-      </span>
+      <Link
+        to="/"
+        className="flex items-center gap-2 min-w-0 hover:opacity-90"
+        aria-label="TonerTrack home — fleet board"
+      >
+        <span className="h-7 w-7 rounded-md bg-[#e8eaed] text-[#1a1c1f] flex items-center justify-center text-xs font-bold shrink-0">
+          T
+        </span>
+        <span className="tt-display text-base tracking-wide truncate">TonerTrack</span>
+      </Link>
+      <div className="flex-1" />
+      <Link
+        to="/"
+        className="text-[11px] font-medium uppercase tracking-wider text-[#9aa0a8] hover:text-[#e8eaed] hidden sm:inline"
+      >
+        Fleet board
+      </Link>
     </header>
   );
 };

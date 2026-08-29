@@ -17,12 +17,12 @@ const Sidebar: React.FC<{
   const nav = (
     <>
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/10">
-        <div className="flex items-center gap-2.5">
+        <NavLink to="/" end className="flex items-center gap-2.5 min-w-0" onClick={() => window.innerWidth < 768 && toggleSidebar()}>
           <div className="h-8 w-8 rounded-md bg-[#e8eaed] text-[#1a1c1f] flex items-center justify-center text-xs font-bold">
             T
           </div>
           <span className="tt-display text-lg tracking-wide">TonerTrack</span>
-        </div>
+        </NavLink>
         <button
           type="button"
           onClick={toggleSidebar}

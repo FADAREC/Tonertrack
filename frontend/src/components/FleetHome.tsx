@@ -114,17 +114,20 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
   const [checksById, setChecksById] = useState<Record<number, any[]>>({});
   const [checksLoading, setChecksLoading] = useState<number | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
+  const load = useCallback(async (opts?: { quiet?: boolean }) => {
+    const quiet = !!opts?.quiet;
+    if (!quiet) {
+      setLoading(true);
+      setError('');
+    }
     try {
       const res = await printersAPI.list();
       setPrinters(res.data.printers || []);
       setLastRefresh(new Date());
     } catch (e: any) {
-      setError(e?.response?.data?.detail || 'Could not load printers');
+      if (!quiet) setError(e?.response?.data?.detail || 'Could not load printers');
     } finally {
-      setLoading(false);
+      if (!quiet) setLoading(false);
     }
   }, []);
 
@@ -142,8 +145,8 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
   useEffect(() => {
     load();
     loadPollConfig();
-    const t = setInterval(load, 30000);
-    return () => clearInterval(t);
+    const id = setInterval(() => load({ quiet: true }), 60000);
+    return () => clearInterval(id);
   }, [load, loadPollConfig]);
 
   const savePollInterval = async (seconds: number) => {

@@ -6,9 +6,33 @@ from auth import get_password_hash
 
 
 def ensure_user_workspace(db: Session, user: models.User) -> int:
-    """Guarantee user has a workspace; create one if missing. Returns workspace id."""
+    """Guarantee user has a private workspace. Split shared/legacy offices."""
     if user.workspace_id is not None:
+        others = (
+            db.query(models.User)
+            .filter(models.User.workspace_id == user.workspace_id)
+            .filter(models.User.id != user.id)
+            .count()
+        )
+        ws_row = (
+            db.query(models.Workspace)
+            .filter(models.Workspace.id == user.workspace_id)
+            .first()
+        )
+        legacy = bool(ws_row and (ws_row.name or "").strip().lower() == "legacy office")
+        # Shared or legacy pool → personal empty office (fleet no longer leaks across accounts)
+        if others > 0 or legacy:
+            ws = models.Workspace(name=f"{user.username}'s office")
+            db.add(ws)
+            db.flush()
+            user.workspace_id = ws.id
+            user.role = "admin"
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            return int(user.workspace_id)
         return int(user.workspace_id)
+
     ws = models.Workspace(name=f"{user.username}'s office")
     db.add(ws)
     db.flush()
@@ -108,6 +132,7 @@ def get_printers(db: Session, skip: int = 0, limit: int = 100, workspace_id: int
     return (
         db.query(models.Printer)
         .filter(models.Printer.workspace_id == workspace_id)
+        .filter(models.Printer.workspace_id.isnot(None))
         .offset(skip)
         .limit(limit)
         .all()
