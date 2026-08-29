@@ -23,6 +23,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
   const [busy, setBusy] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(0);
 
   const load = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true);
@@ -40,6 +41,24 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
   useEffect(() => {
     load();
   }, [load]);
+
+  // GitHub-style: secret only stays on screen briefly
+  useEffect(() => {
+    if (!rawOnce) return;
+    if (secondsLeft <= 0) {
+      setRawOnce(null);
+      return;
+    }
+    const id = window.setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [rawOnce, secondsLeft]);
+
+  // Never keep the secret if the user leaves the page
+  useEffect(() => {
+    return () => {
+      setRawOnce(null);
+    };
+  }, []);
 
   const activeTokens = useMemo(
     () => tokens.filter((t) => !t.revoked_at),
@@ -70,7 +89,8 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
     try {
       const res = await agentAPI.quickSetup();
       setRawOnce(res.data.raw_token);
-      toast.success('Access key created');
+      setSecondsLeft(60);
+      toast.success('Access key created — copy it now');
       await load(true);
     } catch (e: any) {
       setError(e?.response?.data?.detail || 'Could not create access key');
@@ -79,12 +99,18 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
     }
   };
 
+  const hideKey = () => {
+    setRawOnce(null);
+    setSecondsLeft(0);
+    setCopied(false);
+  };
+
   const copyRaw = async () => {
     if (!rawOnce) return;
     try {
       await navigator.clipboard.writeText(rawOnce);
       setCopied(true);
-      toast.success('Key copied');
+      toast.success('Copied — hide the key when you are done');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       setError('Could not copy — select the key and copy manually');
@@ -101,7 +127,8 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
     try {
       await agentAPI.downloadStarterBat(rawOnce);
       setDownloaded(true);
-      toast.success('Windows starter downloaded');
+      toast.success('Starter downloaded — hide the key when finished');
+      setSecondsLeft((s) => (s > 20 ? 20 : s));
     } catch (e: any) {
       setError(e?.response?.data?.detail || e?.message || 'Download failed');
     } finally {
@@ -194,16 +221,20 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
         {rawOnce && (
           <>
             <p className="text-xs text-[#e6b800] font-medium">
-              Shown once. Store it like a password — you cannot view it again.
+              Shown once. Copy it now — it disappears after {secondsLeft}s or when you hide it.
+              You cannot view it again.
             </p>
             <div className="flex items-center gap-2">
-              <code className="flex-1 text-xs break-all tt-lcd bg-[#1a1c1f] border border-white/10 px-3 py-2 rounded-md">
+              <code className="flex-1 text-xs break-all tt-lcd bg-[#1a1c1f] border border-white/10 px-3 py-2 rounded-md select-all">
                 {rawOnce}
               </code>
-              <button type="button" onClick={copyRaw} className="tt-btn tt-btn-ghost shrink-0">
+              <button type="button" onClick={copyRaw} className="tt-btn tt-btn-ghost shrink-0" title="Copy">
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </button>
             </div>
+            <button type="button" onClick={hideKey} className="tt-btn tt-btn-ghost text-sm">
+              I saved this key — hide it
+            </button>
           </>
         )}
         {step1Done && !rawOnce && (
