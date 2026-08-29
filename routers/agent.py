@@ -1,13 +1,16 @@
 """Agent report API — opaque token auth checked on every request."""
 from datetime import datetime
 from typing import Optional
+import os
+from pathlib import Path as FsPath
 
 from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi.responses import FileResponse, PlainTextResponse, Response
 from sqlalchemy.orm import Session
 
 from database import get_db
 from auth import get_current_user, UserInDB
-from crud import get_printer
+from crud import get_printer, get_printers, ensure_user_workspace
 from schemas import (
     AgentReportRequest,
     AgentTokenCreate,
@@ -29,10 +32,6 @@ from services.settings_service import (
     set_poll_interval_seconds,
     ALLOWED_POLL_INTERVALS,
 )
-from crud import get_printers
-from fastapi.responses import FileResponse, PlainTextResponse, Response, PlainTextResponse, Response
-import os
-from pathlib import Path as FsPath
 from routers.printers import _serialize
 import models
 
@@ -42,6 +41,20 @@ router = APIRouter(prefix="/agent", tags=["agent"])  # Office helper
 def _require_admin(user: UserInDB) -> None:
     if getattr(user, "role", None) != "admin":
         raise HTTPException(status_code=403, detail="Admin only")
+
+def _workspace_for(db: Session, current_user: UserInDB) -> int:
+    db_user = (
+        db.query(models.User)
+        .filter(models.User.username == current_user.username)
+        .first()
+    )
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    try:
+        return ensure_user_workspace(db, db_user)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not set up your office.")
+
 
 
 def _iso(dt) -> Optional[str]:
@@ -100,9 +113,7 @@ def issue_token(
     current_user: UserInDB = Depends(get_current_user),
 ):
     _require_admin(current_user)
-    ws = getattr(current_user, "workspace_id", None)
-    if ws is None:
-        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
+    ws = _workspace_for(db, current_user)
     try:
         row, raw = create_agent_token(
             db,
@@ -127,7 +138,7 @@ def list_tokens(
     _require_admin(current_user)
     return [
         _public_token(r)
-        for r in list_agent_tokens(db, workspace_id=getattr(current_user, "workspace_id", None))
+        for r in list_agent_tokens(db, workspace_id=_workspace_for(db, current_user))
     ]
 
 
@@ -142,7 +153,7 @@ def revoke_token(
         db,
         token_id,
         revoked_by=current_user.username,
-        workspace_id=getattr(current_user, "workspace_id", None),
+        workspace_id=_workspace_for(db, current_user),
     )
     if not row:
         raise HTTPException(status_code=404, detail="Token not found")
