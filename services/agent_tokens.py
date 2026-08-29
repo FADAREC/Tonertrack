@@ -1,4 +1,4 @@
-"""Opaque agent API tokens — hashed at rest, shown once, checked on every report."""
+"""Opaque agent API tokens - hashed at rest, shown once, checked on every report."""
 from __future__ import annotations
 
 import hashlib
@@ -97,7 +97,7 @@ def revoke_agent_token(
 def verify_agent_token(db: Session, raw: str) -> Optional[models.AgentToken]:
     """
     Lookup by hash. Returns None if missing or revoked.
-    Auth is evaluated on every call — never cache across requests/connections.
+    Auth is evaluated on every call - never cache across requests/connections.
     """
     if not raw or not raw.startswith("tt_"):
         return None

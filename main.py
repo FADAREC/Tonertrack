@@ -188,7 +188,7 @@ def trust_choice(
 ):
     if body.mode not in {"manual_only", "agent_accepted"}:
         raise HTTPException(status_code=400, detail="mode must be manual_only or agent_accepted")
-    # Agent install is not shipped in Step 1 — accepting only records preference
+    # Agent install is not shipped in Step 1 - accepting only records preference
     row = set_trust(db, current_user.username, body.mode)
     accepted = row.accepted_at.isoformat() if row.accepted_at else None
     return TrustStatus(mode=row.mode, accepted_at=accepted)
@@ -327,7 +327,7 @@ if STATIC_DIR.is_dir():
     if _static.is_dir():
         app.mount("/static", StaticFiles(directory=_static), name="static")
 
-    # Paths that are real API/docs GETs — do not return index.html for these
+    # Paths that are real API/docs GETs - do not return index.html for these
     _API_ROOTS = {
         "docs",
         "redoc",

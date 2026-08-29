@@ -92,7 +92,7 @@ def add_printer(
     # Cloud must never dial customer printer IPs (private LAN is unreachable from
     # Render; public/port-forward would still violate the trust model).
     # Probing belongs on a local agent/one-shot inside the customer network.
-    # Hard off — not an RFC1918 conditional.
+    # Hard off - not an RFC1918 conditional.
     if mode != "manual" and created.ip_address:
         logger.warning(
             "Cloud probe disabled: skipped outbound check to %s (mode=%s). "
@@ -101,7 +101,7 @@ def add_printer(
             mode,
         )
         created.status_detail = "probe_skipped_cloud_disabled"
-        # Do not touch last_verified_at / fail_streak — nothing was verified or attempted on-LAN
+        # Do not touch last_verified_at / fail_streak - nothing was verified or attempted on-LAN
         db.add(created)
         db.commit()
         db.refresh(created)
@@ -136,12 +136,12 @@ def update_printer_endpoint(
     status_keys = set(data.keys()) & {"status", "toner_level"}
     meta_keys = set(data.keys()) - {"status", "toner_level"}
 
-    # Metadata only — never touches verification clocks
+    # Metadata only - never touches verification clocks
     if meta_keys:
         meta = {k: data[k] for k in meta_keys}
         printer = update_printer(db, printer, meta)
 
-    # Status / toner verification — shared domain path (resets fail_streak)
+    # Status / toner verification - shared domain path (resets fail_streak)
     if status_keys:
         try:
             printer = apply_human_status(
@@ -173,13 +173,13 @@ async def scan(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    """Subnet scan is disabled in Step 1 trust model — refuse by default."""
+    """Subnet scan is disabled in Step 1 trust model - refuse by default."""
     raise HTTPException(
         status_code=403,
         detail=(
             "Network-wide scan is disabled. Add printers one by one "
             "(manual, SNMP, web, or ping). An optional on-site agent "
-            "will only contact IPs you list — never your whole subnet."
+            "will only contact IPs you list - never your whole subnet."
         ),
     )
 

@@ -82,7 +82,7 @@ def create_printer(db: Session, printer: PrinterCreate, workspace_id: int | None
     data = printer.model_dump() if hasattr(printer, "model_dump") else printer.dict()
     if workspace_id is not None:
         data["workspace_id"] = workspace_id
-    # Creation is not verification — clocks stay null until first status/toner write
+    # Creation is not verification - clocks stay null until first status/toner write
     data["last_checked"] = None
     data["last_verified_at"] = None
     data["last_attempt_at"] = None

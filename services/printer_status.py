@@ -2,9 +2,9 @@
 Printer status verification rules (single place for human + agent writes).
 
 Clocks:
-  last_verified_at — successful human status/toner write, or successful agent read
-  last_attempt_at  — every agent attempt (success or fail)
-  last_checked     — legacy mirror of last_verified_at for older clients
+  last_verified_at - successful human status/toner write, or successful agent read
+  last_attempt_at  - every agent attempt (success or fail)
+  last_checked     - legacy mirror of last_verified_at for older clients
 
 Fail streak:
   Unreachable failures debounce (N consecutive) before effective status flips.
@@ -207,7 +207,7 @@ def apply_agent_result(
         )
         return printer
 
-    # Unreachable — atomic streak increment
+    # Unreachable - atomic streak increment
     db.execute(
         update(models.Printer)
         .where(models.Printer.id == printer.id)
@@ -299,9 +299,9 @@ def serialize_status_fields(printer: models.Printer) -> dict:
     if verified is None and printer.toner_level is None and (printer.status or "unknown") == "unknown":
         age_note = "Not checked yet"
     elif stale and printer.toner_level is not None:
-        age_note = f"Stale — last checked {printer.toner_level}% ({verified_age})"
+        age_note = f"Stale - last checked {printer.toner_level}% ({verified_age})"
     elif stale:
-        age_note = f"Stale — last checked {verified_age}"
+        age_note = f"Stale - last checked {verified_age}"
     elif verified_age:
         age_note = f"Checked {verified_age}"
         if attempt_age and attempt != verified:

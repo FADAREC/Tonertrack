@@ -1,4 +1,4 @@
-"""Agent report API — opaque token auth checked on every request."""
+"""Agent report API - opaque token auth checked on every request."""
 from datetime import datetime
 from typing import Optional
 import os
@@ -168,7 +168,7 @@ def agent_report(
 ):
     """
     Local agent/one-shot posts status. Auth checked on this request only.
-    Narrow body — no fleet metadata writes.
+    Narrow body - no fleet metadata writes.
     """
     printer = get_printer(db, body.printer_id, workspace_id=getattr(agent, "workspace_id", None))
     if not printer:
@@ -471,7 +471,7 @@ def download_windows_starter(
     log.detail = "starter_bat_ok"
     db.add(log)
     db.commit()
-    # Do not touch last_used_at here — "live" means the helper checked in, not download
+    # Do not touch last_used_at here - "live" means the helper checked in, not download
     return Response(
         content=bat,
         media_type="application/octet-stream",

@@ -93,7 +93,7 @@ class PrinterList(BaseModel):
 
 
 class TrustInfo(BaseModel):
-    """What we access / never access — shown before any network path."""
+    """What we access / never access - shown before any network path."""
     title: str
     what_we_access: List[str]
     what_we_never_access: List[str]
@@ -138,7 +138,7 @@ StatusDetailValue = Literal[
 
 
 class AgentReportRequest(BaseModel):
-    """Narrow write surface for agent tokens — status verification only.
+    """Narrow write surface for agent tokens - status verification only.
 
     Unknown status_detail values are rejected (422), not ignored.
     """
@@ -168,7 +168,7 @@ class AgentTokenPublic(BaseModel):
 
 
 class AgentTokenCreated(BaseModel):
-    """Returned only at creation — includes raw token once."""
+    """Returned only at creation - includes raw token once."""
     token: AgentTokenPublic
     raw_token: str
     warning: str = "Store this token now. It will not be shown again."
