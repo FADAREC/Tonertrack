@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="TonerTrack">
+  <title>TonerTrack</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2a2e34"/>
+      <stop offset="100%" stop-color="#1a1c1f"/>
+    </linearGradient>
+    <style>
+      .bg { fill: url(#g); }
+      .mark { fill: #f2f4f6; }
+      .c { fill: #00a3e0; }
+      .m { fill: #ec008c; }
+      .y { fill: #e6c200; }
+      .k { fill: #c8ccd0; }
+      @media (prefers-color-scheme: light) {
+        .bg { fill: #e8eaed; }
+        .mark { fill: #14161a; }
+        .k { fill: #3a3f46; }
+      }
+    </style>
+  </defs>
+  <rect class="bg" width="64" height="64" rx="14"/>
+  <path class="mark" d="M14 15h36v6.5H36.5V50h-9V21.5H14V15z"/>
+  <!-- CMYK micro bars — signature, still calm -->
+  <rect class="c" x="18" y="54" width="6" height="3" rx="1"/>
+  <rect class="m" x="26" y="54" width="6" height="3" rx="1"/>
+  <rect class="y" x="34" y="54" width="6" height="3" rx="1"/>
+  <rect class="k" x="42" y="54" width="6" height="3" rx="1"/>
+</svg>

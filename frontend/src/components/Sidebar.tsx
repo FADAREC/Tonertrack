@@ -18,9 +18,7 @@ const Sidebar: React.FC<{
     <>
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/10">
         <NavLink to="/" end className="flex items-center gap-2.5 min-w-0" onClick={() => window.innerWidth < 768 && toggleSidebar()}>
-          <div className="h-8 w-8 rounded-md bg-[#e8eaed] text-[#1a1c1f] flex items-center justify-center text-xs font-bold">
-            T
-          </div>
+          <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" width={32} height={32} />
           <span className="tt-display text-lg tracking-wide">TonerTrack</span>
         </NavLink>
         <button

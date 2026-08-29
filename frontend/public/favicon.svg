@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TonerTrack">
+  <title>TonerTrack</title>
+  <defs>
+    <style>
+      .bg { fill: #1a1c1f; }
+      .mark { fill: #f2f4f6; }
+      .accent { fill: #00a3e0; }
+      @media (prefers-color-scheme: light) {
+        .bg { fill: #eceff2; }
+        .mark { fill: #14161a; }
+        .accent { fill: #0077a8; }
+      }
+    </style>
+  </defs>
+  <!-- Squircle panel -->
+  <rect class="bg" width="32" height="32" rx="8"/>
+  <!-- Condensed T — asset-tag energy, reads at 16px -->
+  <path class="mark" d="M8 8.5h16v3.2H18.4V24h-4.8V11.7H8V8.5z"/>
+  <!-- Supply accent — single bar (mono-first brand cue) -->
+  <rect class="accent" x="11" y="26" width="10" height="2" rx="1"/>
+</svg>

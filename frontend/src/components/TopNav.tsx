@@ -22,9 +22,7 @@ const TopNav: React.FC<{
         className="flex items-center gap-2 min-w-0 hover:opacity-90"
         aria-label="TonerTrack home — fleet board"
       >
-        <span className="h-7 w-7 rounded-md bg-[#e8eaed] text-[#1a1c1f] flex items-center justify-center text-xs font-bold shrink-0">
-          T
-        </span>
+        <img src="/logo.svg" alt="" className="h-7 w-7 rounded-md shrink-0" width={28} height={28} />
         <span className="tt-display text-base tracking-wide truncate">TonerTrack</span>
       </Link>
       <div className="flex-1" />
