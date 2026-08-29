@@ -187,23 +187,28 @@ async def scan(
 @router.get("/{printer_id}/checks")
 def list_status_checks(
     printer_id: int,
-    limit: int = 10,
+    limit: int = 50,
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    """Recent status checks for evidence trail (Goal 1 / Goal 2)."""
+    """Status/toner history for this printer (bill and ops evidence)."""
     printer = get_printer(db, printer_id, workspace_id=_require_workspace(db, current_user))
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
-    limit = max(1, min(limit, 100))
-    rows = (
+    limit = max(1, min(limit, 200))
+    q = (
         db.query(models.StatusCheck)
         .filter(models.StatusCheck.printer_id == printer_id)
-        .order_by(models.StatusCheck.created_at.desc())
+    )
+    total = q.count()
+    rows = (
+        q.order_by(models.StatusCheck.created_at.desc())
         .limit(limit)
         .all()
     )
     return {
+        "printer_id": printer_id,
+        "total": total,
         "checks": [
             {
                 "id": r.id,
@@ -215,5 +220,5 @@ def list_status_checks(
                 "created_at": r.created_at.isoformat() if r.created_at else None,
             }
             for r in rows
-        ]
+        ],
     }
