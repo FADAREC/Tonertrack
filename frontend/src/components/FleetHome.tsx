@@ -404,7 +404,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                   if (!checksById[p.id]) {
                     setChecksLoading(p.id);
                     try {
-                      const res = await printersAPI.checks(p.id, 8);
+                      const res = await printersAPI.checks(p.id, 50);
                       setChecksById((prev) => ({ ...prev, [p.id]: res.data.checks || [] }));
                     } catch {
                       setChecksById((prev) => ({ ...prev, [p.id]: [] }));
@@ -519,23 +519,78 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                     <p className="tt-mono">{p.ip_address || 'No IP for helper'}</p>
                   </div>
                   <div className="space-y-1 pt-3">
-                    <p className="text-[10px] text-[#5c6b86]">Recent checks (evidence)</p>
-                    {checksLoading === p.id && <p>Loading…</p>}
-                    {(checksById[p.id] || []).length === 0 && checksLoading !== p.id && (
-                      <p>No checks recorded yet.</p>
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <p className="text-xs font-medium text-[#e8eaed]">History</p>
+                        <p className="text-[11px] text-[#9aa0a8]">
+                          Status and toner over time — use when a bill or repair is questioned.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        className="tt-btn tt-btn-ghost text-xs shrink-0"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          setChecksLoading(p.id);
+                          try {
+                            const res = await printersAPI.checks(p.id, 50);
+                            setChecksById((prev) => ({ ...prev, [p.id]: res.data.checks || [] }));
+                          } catch {
+                            setChecksById((prev) => ({ ...prev, [p.id]: [] }));
+                          } finally {
+                            setChecksLoading(null);
+                          }
+                        }}
+                      >
+                        Refresh
+                      </button>
+                    </div>
+                    {checksLoading === p.id && (
+                      <p className="text-xs text-[#9aa0a8]">Loading history…</p>
                     )}
-                    <ul className="space-y-1">
-                      {(checksById[p.id] || []).map((c: any) => (
-                        <li key={c.id} className="flex flex-wrap gap-x-2">
-                          <span className="text-[#f2f5ff]/90">
-                            {c.created_at ? new Date(c.created_at).toLocaleString() : ''}
-                          </span>
-                          <span>{c.source}</span>
-                          <span>{c.ok === false ? 'failed' : c.status || 'ok'}</span>
-                          {c.toner_level != null && <span>{c.toner_level}%</span>}
-                        </li>
-                      ))}
-                    </ul>
+                    {(checksById[p.id] || []).length === 0 && checksLoading !== p.id && (
+                      <p className="text-xs text-[#9aa0a8]">
+                        No history yet. Run the office checker or update status/toner once — each
+                        change is stored here.
+                      </p>
+                    )}
+                    {(checksById[p.id] || []).length > 0 && (
+                      <div className="rounded-md border border-white/10 overflow-hidden">
+                        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-2 py-1.5 text-[10px] uppercase tracking-wide text-[#9aa0a8] bg-white/5">
+                          <span>When</span>
+                          <span>Source</span>
+                          <span>Status</span>
+                          <span className="text-right">Toner</span>
+                        </div>
+                        <ul className="max-h-56 overflow-y-auto divide-y divide-white/5">
+                          {(checksById[p.id] || []).map((c: any) => {
+                            const src =
+                              c.source === 'agent' || c.source === 'helper'
+                                ? 'Checker'
+                                : c.source === 'human' || c.source === 'manual'
+                                  ? 'Person'
+                                  : c.source || '—';
+                            return (
+                              <li
+                                key={c.id}
+                                className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-2 py-1.5 text-xs items-center"
+                              >
+                                <span className="tt-lcd text-[#e8eaed] truncate">
+                                  {c.created_at ? new Date(c.created_at).toLocaleString() : '—'}
+                                </span>
+                                <span className="text-[#9aa0a8]">{src}</span>
+                                <span className="text-[#e8eaed]">
+                                  {c.ok === false ? c.status_detail || 'failed' : c.status || 'ok'}
+                                </span>
+                                <span className="tt-lcd text-right tabular-nums">
+                                  {c.toner_level != null ? `${c.toner_level}%` : '—'}
+                                </span>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
