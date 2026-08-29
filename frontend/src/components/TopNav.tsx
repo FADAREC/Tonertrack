@@ -21,7 +21,7 @@ const TopNav: React.FC<{
       <Link
         to="/"
         className="flex items-center gap-2 min-w-0 hover:opacity-90"
-        aria-label="TonerTrack home — fleet board"
+        aria-label="TonerTrack home - fleet board"
       >
         <BrandMark size={28} wordmarkClassName="tt-display text-base tracking-wide" />
       </Link>

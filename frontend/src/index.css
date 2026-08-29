@@ -68,7 +68,7 @@ body {
   position: relative;
 }
 
-/* Hazard stripe — low toner / attention (quiet, unmistakable) */
+/* Hazard stripe - low toner / attention (quiet, unmistakable) */
 .tt-card-attention {
   border-color: rgba(230, 184, 0, 0.45);
 }
@@ -89,7 +89,7 @@ body {
   );
 }
 
-/* Critical — offline only */
+/* Critical - offline only */
 .tt-card-critical {
   border-color: rgba(224, 36, 36, 0.5);
 }

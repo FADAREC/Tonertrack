@@ -265,7 +265,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
         </div>
       )}
 
-      {/* Glance strip — quiet when healthy */}
+      {/* Glance strip - quiet when healthy */}
       {!loading && (lowCount > 0 || staleCount > 0) && (
         <div
           className="tt-card px-4 py-3 flex flex-wrap items-center gap-3"
@@ -487,7 +487,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                         }}
                         className="text-xs tt-lcd text-[#e8eaed] hover:text-white"
                       >
-                        {p.toner_level != null ? `${p.toner_level}%` : '—'}
+                        {p.toner_level != null ? `${p.toner_level}%` : '-'}
                       </button>
                     )}
                   </div>
@@ -507,7 +507,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                 </div>
               </div>
 
-              {/* Pinecone disclosure — detail only when opened */}
+              {/* Pinecone disclosure - detail only when opened */}
               {open && (
                 <div className="px-4 pb-4 border-t border-white/5 grid gap-3 sm:grid-cols-2 text-xs text-[#8b9bb8]">
                   <div className="space-y-1 pt-3">
@@ -523,7 +523,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                       <div>
                         <p className="text-xs font-medium text-[#e8eaed]">History</p>
                         <p className="text-[11px] text-[#9aa0a8]">
-                          Status and toner over time — use when a bill or repair is questioned.
+                          Status and toner over time - use when a bill or repair is questioned.
                         </p>
                       </div>
                       <button
@@ -550,7 +550,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                     )}
                     {(checksById[p.id] || []).length === 0 && checksLoading !== p.id && (
                       <p className="text-xs text-[#9aa0a8]">
-                        No history yet. Run the office checker or update status/toner once — each
+                        No history yet. Run the office checker or update status/toner once - each
                         change is stored here.
                       </p>
                     )}
@@ -569,21 +569,21 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                                 ? 'Checker'
                                 : c.source === 'human' || c.source === 'manual'
                                   ? 'Person'
-                                  : c.source || '—';
+                                  : c.source || '-';
                             return (
                               <li
                                 key={c.id}
                                 className="grid grid-cols-[1fr_auto_auto_auto] gap-2 px-2 py-1.5 text-xs items-center"
                               >
                                 <span className="tt-lcd text-[#e8eaed] truncate">
-                                  {c.created_at ? new Date(c.created_at).toLocaleString() : '—'}
+                                  {c.created_at ? new Date(c.created_at).toLocaleString() : '-'}
                                 </span>
                                 <span className="text-[#9aa0a8]">{src}</span>
                                 <span className="text-[#e8eaed]">
                                   {c.ok === false ? c.status_detail || 'failed' : c.status || 'ok'}
                                 </span>
                                 <span className="tt-lcd text-right tabular-nums">
-                                  {c.toner_level != null ? `${c.toner_level}%` : '—'}
+                                  {c.toner_level != null ? `${c.toner_level}%` : '-'}
                                 </span>
                               </li>
                             );

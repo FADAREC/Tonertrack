@@ -91,7 +91,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       const res = await agentAPI.quickSetup();
       setRawOnce(res.data.raw_token);
       setSecondsLeft(60);
-      toast.success('Access key created — copy it now');
+      toast.success('Access key created - copy it now');
       await load(true);
     } catch (e: any) {
       setError(e?.response?.data?.detail || 'Could not create access key');
@@ -111,10 +111,10 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
     try {
       await navigator.clipboard.writeText(rawOnce);
       setCopied(true);
-      toast.success('Copied — hide the key when you are done');
+      toast.success('Copied - hide the key when you are done');
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setError('Could not copy — select the key and copy manually');
+      setError('Could not copy - select the key and copy manually');
     }
   };
 
@@ -128,7 +128,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
     try {
       await agentAPI.downloadStarterBat(rawOnce);
       setDownloaded(true);
-      toast.success('Starter downloaded — hide the key when finished');
+      toast.success('Starter downloaded - hide the key when finished');
       setSecondsLeft((s) => (s > 20 ? 20 : s));
     } catch (e: any) {
       setError(e?.response?.data?.detail || e?.message || 'Download failed');
@@ -186,7 +186,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
         <div>
           <h1 className="tt-display text-2xl tracking-wide">Office checker</h1>
           <p className="text-sm text-[#9aa0a8] mt-1">
-            Updates the board from a PC on your network. Only printers on your board are checked — no network scan.
+            Updates the board from a PC on your network. Only printers on your board are checked - no network scan.
           </p>
         </div>
       </div>
@@ -225,7 +225,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
         {rawOnce && (
           <>
             <p className="text-xs text-[#e6b800] font-medium">
-              Shown once. Copy it now — it disappears after {secondsLeft}s or when you hide it.
+              Shown once. Copy it now - it disappears after {secondsLeft}s or when you hide it.
               You cannot view it again.
             </p>
             <div className="flex items-center gap-2">
@@ -237,7 +237,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
               </button>
             </div>
             <button type="button" onClick={hideKey} className="tt-btn tt-btn-ghost text-sm">
-              I saved this key — hide it
+              I saved this key - hide it
             </button>
           </>
         )}
@@ -277,7 +277,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
           </p>
         )}
         {downloaded && (
-          <p className="text-xs text-[#2db84b]">Starter downloaded — run it in step 3.</p>
+          <p className="text-xs text-[#2db84b]">Starter downloaded - run it in step 3.</p>
         )}
       </StepShell>
 

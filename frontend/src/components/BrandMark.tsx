@@ -1,6 +1,6 @@
 import React from 'react';
 
-/** Shared TonerTrack mark — SVG app icon + wordmark */
+/** Shared TonerTrack mark - SVG app icon + wordmark */
 const BrandMark: React.FC<{
   size?: number;
   showWordmark?: boolean;
