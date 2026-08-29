@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Copy, Download, Key, Loader2, RefreshCw } from 'lucide-react';
 import { agentAPI } from '../services/api';
+import BrandMark from './BrandMark';
 import toast from 'react-hot-toast';
 
 type TokenRow = {
@@ -180,11 +181,14 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
 
   return (
     <div className="max-w-xl mx-auto space-y-5 pb-16">
-      <div>
-        <h1 className="tt-display text-2xl tracking-wide">Office checker</h1>
-        <p className="text-sm text-[#9aa0a8] mt-1">
-          Updates the board from a PC on your network. Only printers on your board are checked — no network scan.
-        </p>
+      <div className="space-y-3">
+        <BrandMark size={28} wordmarkClassName="tt-display text-base tracking-wide" />
+        <div>
+          <h1 className="tt-display text-2xl tracking-wide">Office checker</h1>
+          <p className="text-sm text-[#9aa0a8] mt-1">
+            Updates the board from a PC on your network. Only printers on your board are checked — no network scan.
+          </p>
+        </div>
       </div>
 
       {error && (

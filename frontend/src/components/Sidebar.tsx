@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutGrid, PlusCircle, Activity, LogOut, X } from 'lucide-react';
+import BrandMark from './BrandMark';
 
 const Sidebar: React.FC<{
   darkMode: boolean;
@@ -18,8 +19,7 @@ const Sidebar: React.FC<{
     <>
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/10">
         <NavLink to="/" end className="flex items-center gap-2.5 min-w-0" onClick={() => window.innerWidth < 768 && toggleSidebar()}>
-          <img src="/logo.svg" alt="" className="h-8 w-8 rounded-md" width={32} height={32} />
-          <span className="tt-display text-lg tracking-wide">TonerTrack</span>
+          <BrandMark size={32} />
         </NavLink>
         <button
           type="button"

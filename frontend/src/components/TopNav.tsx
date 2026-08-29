@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Menu } from 'lucide-react';
+import BrandMark from './BrandMark';
 
 const TopNav: React.FC<{
   darkMode: boolean;
@@ -22,8 +23,7 @@ const TopNav: React.FC<{
         className="flex items-center gap-2 min-w-0 hover:opacity-90"
         aria-label="TonerTrack home — fleet board"
       >
-        <img src="/logo.svg" alt="" className="h-7 w-7 rounded-md shrink-0" width={28} height={28} />
-        <span className="tt-display text-base tracking-wide truncate">TonerTrack</span>
+        <BrandMark size={28} wordmarkClassName="tt-display text-base tracking-wide" />
       </Link>
       <div className="flex-1" />
       <Link

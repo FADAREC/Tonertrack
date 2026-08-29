@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Shield, CheckCircle, XCircle } from 'lucide-react';
 import { trustAPI } from '../services/api';
+import BrandMark from './BrandMark';
 
 interface TrustInfo {
   title: string;
@@ -49,9 +50,12 @@ const TrustScreen: React.FC<{ onDone: () => void; darkMode: boolean }> = ({ onDo
   return (
     <div className={`min-h-screen flex items-center justify-center p-4 ${darkMode ? 'bg-[#f4f1ea]' : 'bg-slate-50'}`}>
       <div className={`max-w-xl w-full rounded-2xl p-8 ${card}`}>
-        <div className="flex items-center gap-3 mb-6">
-          <Shield className="h-8 w-8 text-blue-500" />
-          <h1 className="text-2xl tracking-tight font-semibold">{info.title}</h1>
+        <div className="mb-6 space-y-4">
+          <BrandMark size={36} wordmarkClassName="tt-display text-xl tracking-wide text-[#111]" />
+          <div className="flex items-center gap-3">
+            <Shield className="h-6 w-6 text-[#00a3e0]" />
+            <h1 className="text-xl tracking-tight font-semibold text-[#111]">{info.title}</h1>
+          </div>
         </div>
 
         <section className="mb-5">

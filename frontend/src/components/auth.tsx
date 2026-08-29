@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { User, Lock, Mail, ArrowRight } from 'lucide-react';
 import { authAPI } from '../services/api';
+import BrandMark from './BrandMark';
 
 function formatError(err: any): string {
   if (!err) return 'Something went wrong. Try again.';
@@ -104,8 +105,7 @@ const Auth: React.FC<{ darkMode: boolean; onAuthed?: () => void }> = ({ darkMode
   return (
     <div className="space-y-6">
       <div className="text-center space-y-2">
-        <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-[#111] text-[#f4f1ea] text-sm font-bold">T</div>
-        <h1 className="text-xl font-semibold tracking-tight text-zinc-50">TonerTrack</h1>
+        <BrandMark size={40} wordmarkClassName="tt-display text-xl tracking-wide text-[#e8eaed]" />
         <p className="text-sm text-zinc-500">Office printer status in one place</p>
       </div>
     <form onSubmit={handleSubmit} className="space-y-5 bg-[#121214] rounded-2xl p-8 border border-white/10">

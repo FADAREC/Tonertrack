@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Auth from './components/auth';
+import BrandMark from './components/BrandMark';
 import TrustScreen from './components/TrustScreen';
 import FleetHome from './components/FleetHome';
 import AddPrinterSimple from './components/AddPrinterSimple';
