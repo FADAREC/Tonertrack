@@ -231,7 +231,7 @@ def get_poll_config_admin(
     current_user: UserInDB = Depends(get_current_user),
 ):
     """Admin/operator: read poll interval for the dashboard UI."""
-    ws = getattr(current_user, "workspace_id", None)
+    ws = _workspace_for(db, current_user)
     seconds = get_poll_interval_seconds(db, workspace_id=ws)
     return {
         "poll_interval_seconds": seconds,
@@ -248,9 +248,7 @@ def set_poll_config_admin(
 ):
     """Admin: set how often the office helper should poll."""
     _require_admin(current_user)
-    ws = getattr(current_user, "workspace_id", None)
-    if ws is None:
-        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
+    ws = _workspace_for(db, current_user)
     try:
         seconds = set_poll_interval_seconds(db, body.poll_interval_seconds, workspace_id=ws)
     except ValueError as e:
@@ -278,9 +276,7 @@ def enable_helper_download(
 ):
     """Admin grants helper download for this token."""
     _require_admin(current_user)
-    ws = getattr(current_user, "workspace_id", None)
-    if ws is None:
-        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
+    ws = _workspace_for(db, current_user)
     row = (
         db.query(models.AgentToken)
         .filter(models.AgentToken.id == token_id)
@@ -362,9 +358,7 @@ def quick_setup_helper(
 ):
     """Create access key, enable download, return raw key once."""
     _require_admin(current_user)
-    ws = getattr(current_user, "workspace_id", None)
-    if ws is None:
-        raise HTTPException(status_code=400, detail="Account is not linked to an office yet.")
+    ws = _workspace_for(db, current_user)
     try:
         row, raw = create_agent_token(
             db,

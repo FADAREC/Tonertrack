@@ -6,44 +6,39 @@ from auth import get_password_hash
 
 
 def ensure_user_workspace(db: Session, user: models.User) -> int:
-    """Guarantee user has a private workspace. Split shared/legacy offices."""
+    """Guarantee every account has a real, private workspace id."""
+    def _attach_new() -> int:
+        ws = models.Workspace(name=f"{user.username}'s office")
+        db.add(ws)
+        db.flush()
+        user.workspace_id = ws.id
+        if not user.role or user.role == "operator":
+            user.role = "admin"
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        return int(user.workspace_id)
+
     if user.workspace_id is not None:
+        ws_row = (
+            db.query(models.Workspace)
+            .filter(models.Workspace.id == user.workspace_id)
+            .first()
+        )
+        if ws_row is None:
+            return _attach_new()
         others = (
             db.query(models.User)
             .filter(models.User.workspace_id == user.workspace_id)
             .filter(models.User.id != user.id)
             .count()
         )
-        ws_row = (
-            db.query(models.Workspace)
-            .filter(models.Workspace.id == user.workspace_id)
-            .first()
-        )
         legacy = bool(ws_row and (ws_row.name or "").strip().lower() == "legacy office")
-        # Shared or legacy pool → personal empty office (fleet no longer leaks across accounts)
         if others > 0 or legacy:
-            ws = models.Workspace(name=f"{user.username}'s office")
-            db.add(ws)
-            db.flush()
-            user.workspace_id = ws.id
-            user.role = "admin"
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-            return int(user.workspace_id)
+            return _attach_new()
         return int(user.workspace_id)
 
-    ws = models.Workspace(name=f"{user.username}'s office")
-    db.add(ws)
-    db.flush()
-    user.workspace_id = ws.id
-    if not user.role or user.role == "operator":
-        user.role = "admin"
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return int(user.workspace_id)
-
+    return _attach_new()
 
 
 def create_user(db: Session, user: UserCreate, role: str | None = None):
