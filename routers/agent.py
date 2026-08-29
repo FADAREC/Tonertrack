@@ -462,7 +462,7 @@ def download_windows_starter(
         "  exit /b 1\r\n"
         ")\r\n"
         "\r\n"
-        "echo Starting checker. Leave this window open.\r\n"
+        "echo Running one check cycle…\r\n"
         "echo.\r\n"
         "python \"%~dp0tonertrack_helper.py\"\r\n"
         "pause\r\n"
@@ -471,7 +471,7 @@ def download_windows_starter(
     log.detail = "starter_bat_ok"
     db.add(log)
     db.commit()
-    touch_last_used(db, agent)
+    # Do not touch last_used_at here — "live" means the helper checked in, not download
     return Response(
         content=bat,
         media_type="application/octet-stream",
