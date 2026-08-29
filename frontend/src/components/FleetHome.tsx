@@ -68,14 +68,24 @@ function rowTone(p: PrinterRow): string {
 
 function CmykBars({ p }: { p: PrinterRow }) {
   const levels = cmykLevels(p);
-  const rows: { key: 'c' | 'm' | 'y' | 'k'; label: string; cls: string }[] = [
-    { key: 'c', label: 'C', cls: 'c' },
-    { key: 'm', label: 'M', cls: 'm' },
-    { key: 'y', label: 'Y', cls: 'y' },
-    { key: 'k', label: 'K', cls: 'k' },
-  ];
+  const hasColor =
+    levels.c != null || levels.m != null || levels.y != null;
+  // Mono / single-cartridge: only black. Full CMYK only when color channels exist.
+  const rows: { key: 'c' | 'm' | 'y' | 'k'; label: string; cls: string }[] = hasColor
+    ? [
+        { key: 'c', label: 'C', cls: 'c' },
+        { key: 'm', label: 'M', cls: 'm' },
+        { key: 'y', label: 'Y', cls: 'y' },
+        { key: 'k', label: 'K', cls: 'k' },
+      ]
+    : [{ key: 'k', label: 'K', cls: 'k' }];
+  const title = hasColor
+    ? 'Color supplies'
+    : p.toner_level != null
+      ? `Black ${p.toner_level}%`
+      : 'Black toner (no reading yet)';
   return (
-    <div className="tt-cmyk" title={p.toner_level != null ? `Black ${p.toner_level}% (reported)` : 'No toner reading'}>
+    <div className="tt-cmyk" title={title}>
       {rows.map((r) => {
         const v = levels[r.key];
         return (
