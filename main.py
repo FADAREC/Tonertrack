@@ -358,8 +358,16 @@ if STATIC_DIR.is_dir():
         first = full_path.split("/")[0]
         if first in _API_ROOTS or full_path == "openapi.json":
             raise HTTPException(status_code=404, detail="Not found")
-        # skip static-like noise
-        if first in {"static", "favicon.ico", "manifest.json", "asset-manifest.json"}:
+        # Serve built root assets (favicon.svg, logo.svg, manifest, etc.)
+        candidate = STATIC_DIR / full_path
+        if (
+            full_path
+            and ".." not in full_path
+            and candidate.is_file()
+            and candidate.resolve().is_relative_to(STATIC_DIR.resolve())
+        ):
+            return FileResponse(candidate)
+        if first in {"static"}:
             raise HTTPException(status_code=404, detail="Not found")
         record_site_visit("/" + full_path)
         index = STATIC_DIR / "index.html"
