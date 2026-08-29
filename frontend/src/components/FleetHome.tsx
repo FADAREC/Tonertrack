@@ -223,7 +223,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
           </p>
         </div>
         <div className="hidden sm:flex gap-2">
-          <button type="button" onClick={load} className="tt-btn tt-btn-ghost">
+          <button type="button" onClick={() => load()} className="tt-btn tt-btn-ghost">
             <RefreshCw className="h-4 w-4" /> Refresh
           </button>
           <Link to="/helper" className="tt-btn tt-btn-ghost">
@@ -539,7 +539,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
       )}
 
       <div className="tt-thumb-bar md:hidden">
-        <button type="button" onClick={load} className="tt-btn tt-btn-ghost">
+        <button type="button" onClick={() => load()} className="tt-btn tt-btn-ghost">
           <RefreshCw className="h-4 w-4" />
         </button>
         <Link to="/helper" className="tt-btn tt-btn-ghost">
