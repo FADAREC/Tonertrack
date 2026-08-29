@@ -24,6 +24,7 @@ class UserResponse(BaseModel):
     username: str
     email: str
     role: str = "operator"
+    workspace_id: int | None = None
 
     class Config:
         from_attributes = True

@@ -21,6 +21,23 @@ router = APIRouter(prefix="/printers", tags=["printers"])
 # Pilot policy: free tier hard cap
 FREE_PRINTER_CAP = 40  # one office floor; Goal 1 coverage
 
+def _require_workspace(db: Session, current_user: UserInDB) -> int:
+    db_user = (
+        db.query(models.User)
+        .filter(models.User.username == current_user.username)
+        .first()
+    )
+    if not db_user:
+        raise HTTPException(status_code=401, detail="Could not validate credentials")
+    try:
+        return ensure_user_workspace(db, db_user)
+    except Exception:
+        raise HTTPException(
+            status_code=500,
+            detail="Could not set up your office. Sign out, sign in again, or contact support.",
+        )
+
+
 
 def _serialize(p: models.Printer) -> dict:
     base = {
@@ -46,9 +63,7 @@ def list_printers(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    ws = getattr(current_user, "workspace_id", None)
-    if ws is None:
-        return {"printers": []}
+    ws = _require_workspace(db, current_user)
     rows = get_printers(db, skip=skip, limit=limit, workspace_id=ws)
     return {"printers": [_serialize(p) for p in rows]}
 
@@ -64,20 +79,7 @@ def add_printer(
     if mode not in {"manual", "snmp", "web", "ping"}:
         raise HTTPException(status_code=400, detail="connection_mode must be manual, snmp, web, or ping")
 
-    db_user = (
-        db.query(models.User)
-        .filter(models.User.username == current_user.username)
-        .first()
-    )
-    if not db_user:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
-    try:
-        ws = ensure_user_workspace(db, db_user)
-    except Exception:
-        raise HTTPException(
-            status_code=500,
-            detail="Could not set up your office. Sign out, sign in again, or contact support.",
-        )
+    ws = _require_workspace(db, current_user)
     existing = get_printers(db, skip=0, limit=1000, workspace_id=ws)
     if len(existing) >= FREE_PRINTER_CAP:
         raise HTTPException(
@@ -113,7 +115,7 @@ def get_printer_details(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    printer = get_printer(db, printer_id, workspace_id=getattr(current_user, "workspace_id", None))
+    printer = get_printer(db, printer_id, workspace_id=_require_workspace(db, current_user))
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     return _serialize(printer)
@@ -126,7 +128,7 @@ def update_printer_endpoint(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    printer = get_printer(db, printer_id, workspace_id=getattr(current_user, "workspace_id", None))
+    printer = get_printer(db, printer_id, workspace_id=_require_workspace(db, current_user))
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     data = updates.model_dump(exclude_unset=True) if hasattr(updates, "model_dump") else updates.dict(exclude_unset=True)
@@ -160,7 +162,7 @@ def delete_printer_endpoint(
     db: Session = Depends(get_db),
     current_user: UserInDB = Depends(get_current_user),
 ):
-    if not delete_printer(db, printer_id, workspace_id=getattr(current_user, "workspace_id", None)):
+    if not delete_printer(db, printer_id, workspace_id=_require_workspace(db, current_user)):
         raise HTTPException(status_code=404, detail="Printer not found")
     return {"detail": "Printer deleted"}
 
@@ -190,7 +192,7 @@ def list_status_checks(
     current_user: UserInDB = Depends(get_current_user),
 ):
     """Recent status checks for evidence trail (Goal 1 / Goal 2)."""
-    printer = get_printer(db, printer_id, workspace_id=getattr(current_user, "workspace_id", None))
+    printer = get_printer(db, printer_id, workspace_id=_require_workspace(db, current_user))
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
     limit = max(1, min(limit, 100))

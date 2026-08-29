@@ -228,8 +228,21 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
 
 
 @app.get("/me", response_model=UserResponse)
-def me(current_user: UserInDB = Depends(get_current_user)):
-    return current_user
+def me(current_user: UserInDB = Depends(get_current_user), db: Session = Depends(get_db)):
+    from crud import ensure_user_workspace
+    row = db.query(models.User).filter(models.User.username == current_user.username).first()
+    ws_id = current_user.workspace_id
+    if row is not None:
+        try:
+            ws_id = ensure_user_workspace(db, row)
+        except Exception:
+            pass
+    return {
+        "username": current_user.username,
+        "email": current_user.email,
+        "role": current_user.role,
+        "workspace_id": ws_id,
+    }
 
 
 @app.post("/logout")

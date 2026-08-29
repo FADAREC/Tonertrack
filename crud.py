@@ -84,12 +84,21 @@ def create_printer(db: Session, printer: PrinterCreate, workspace_id: int | None
         data["status"] = data.get("status") or "unknown"
         data["toner_level"] = None
 
+    if workspace_id is None:
+        raise ValueError("workspace_id is required to create a printer")
+    data["workspace_id"] = workspace_id
     allowed = {c.name for c in models.Printer.__table__.columns}
     payload = {k: v for k, v in data.items() if k in allowed}
     db_printer = models.Printer(**payload)
+    db_printer.workspace_id = workspace_id
     db.add(db_printer)
     db.commit()
     db.refresh(db_printer)
+    if db_printer.workspace_id is None:
+        db_printer.workspace_id = workspace_id
+        db.add(db_printer)
+        db.commit()
+        db.refresh(db_printer)
     return db_printer
 
 
