@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-TonerTrack office helper — run on a PC on the office LAN.
+TonerTrack office helper - run on a PC on the office LAN.
 
 Automatically:
   - pulls listed printers + poll interval from the server
@@ -145,7 +145,7 @@ def snmp_get_v1(ip: str, oid: tuple, community: str = "public", timeout: float =
         return None
     finally:
         sock.close()
-    # Find INTEGER (0x02) or OCTET STRING near the end — enough for supply levels
+    # Find INTEGER (0x02) or OCTET STRING near the end - enough for supply levels
     i = 0
     values = []
     while i < len(data) - 2:

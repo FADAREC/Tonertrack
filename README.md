@@ -10,9 +10,9 @@ Buyer: Investment One first. Operating model: narrow launch → one-week stickin
 
 - Fully hosted app (one URL)
 - Login / register
-- **Trust screen** — clear what we access; Manual only never contacts your network
-- **Fleet list** — name, location, status, toner (or Unknown)
-- **Add printer (manual)** — no network probe
+- **Trust screen** - clear what we access; Manual only never contacts your network
+- **Fleet list** - name, location, status, toner (or Unknown)
+- **Add printer (manual)** - no network probe
 
 Network agent (listed IPs only) comes later. Subnet scan is disabled on purpose.
 

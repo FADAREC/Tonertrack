@@ -1,4 +1,4 @@
-# TonerTrack — locked plan (remade)
+# TonerTrack - locked plan (remade)
 
 Do not dilute. Re-read before any build or outreach decision.
 
@@ -6,8 +6,8 @@ Do not dilute. Re-read before any build or outreach decision.
 
 ## Two goals (unchanged)
 
-1. **Cut support time lost to printer downtime** — status without floor-chasing.
-2. **Make printer bills / consumables defensible with real data** — shared board, not “whoever shouted last.”
+1. **Cut support time lost to printer downtime** - status without floor-chasing.
+2. **Make printer bills / consumables defensible with real data** - shared board, not “whoever shouted last.”
 
 ---
 
@@ -22,7 +22,7 @@ Do not dilute. Re-read before any build or outreach decision.
 ## Price
 
 - Shape: **flat monthly per office**.
-- No number yet — learn from IT what downtime + vendor disputes cost them.
+- No number yet - learn from IT what downtime + vendor disputes cost them.
 - Pilot #1: **DB Pro flag only**. Do not build billing until the loop proves the wedge.
 
 ---
@@ -44,7 +44,7 @@ This replaces a fixed “launch deadline.”
 
 ## Build order (only what serves Investment One live without you in the room)
 
-1. **Usable product UI for IT** — not `/docs` as the only status surface. Board must be obvious after login.
+1. **Usable product UI for IT** - not `/docs` as the only status surface. Board must be obvious after login.
 2. **Manual board + one working agent cycle** for a **subset** of their printers (not all 30 first).
 3. **One person who isn’t the founder** checking it for a real week.
 4. **Parked until the loop proves the wedge once:**
@@ -73,7 +73,7 @@ Time-stamped status/toner and a check trail support can point at when bills or r
 
 ## Pitch (promise we are building toward)
 
-TonerTrack gives support a single live board for the printers that matter on a floor or site. It cuts the noise of chasing status by hand. The same board gives leadership and finance a shared view so toner and maintenance spend isn’t based on whoever shouted last — and so machines can be pushed toward full useful life instead of replacing on panic or habit.
+TonerTrack gives support a single live board for the printers that matter on a floor or site. It cuts the noise of chasing status by hand. The same board gives leadership and finance a shared view so toner and maintenance spend isn’t based on whoever shouted last - and so machines can be pushed toward full useful life instead of replacing on panic or habit.
 
 Support framing: the board protects them with shared evidence; it is not a trap.
 

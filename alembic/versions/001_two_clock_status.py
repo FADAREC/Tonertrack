@@ -27,7 +27,7 @@ def upgrade() -> None:
     if "fail_streak" not in cols:
         op.add_column("printers", sa.Column("fail_streak", sa.Integer(), server_default="0", nullable=False))
 
-    # Backfill from contaminated last_checked — known imperfect
+    # Backfill from contaminated last_checked - known imperfect
     if "last_checked" in cols:
         op.execute(
             sa.text(

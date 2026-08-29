@@ -5,7 +5,7 @@ One-shot LAN reporter for TonerTrack (pilot).
 Run this on a machine that can reach the printers (office PC), not from the cloud.
 
   export TONERTRACK_URL=https://tonertrack.onrender.com
-  export TONERTRACK_AGENT_TOKEN=tt_...   # from admin POST /agent/tokens — never commit
+  export TONERTRACK_AGENT_TOKEN=tt_...   # from admin POST /agent/tokens - never commit
   python scripts/oneshot_report.py --printer-id 1 --toner 42
   python scripts/oneshot_report.py --printer-id 1 --unreachable
   python scripts/oneshot_report.py --printer-id 1 --device-reported
