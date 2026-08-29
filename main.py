@@ -20,6 +20,8 @@ from auth import (
     get_current_user,
     UserInDB,
     verify_password,
+    get_password_hash,
+    password_hash_needs_update,
     SECRET_KEY,
     ALGORITHM,
     require_secrets,
@@ -217,6 +219,10 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     user = get_user_by_login(db, form_data.username.strip())
     if not user or not verify_password(form_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Wrong username or password.")
+    if password_hash_needs_update(user.hashed_password):
+        user.hashed_password = get_password_hash(form_data.password)
+        db.add(user)
+        db.commit()
     role = getattr(user, "role", None) or "admin"
     access_token = create_access_token(
         data={"sub": user.username, "email": user.email, "role": role}
