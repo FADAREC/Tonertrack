@@ -72,8 +72,9 @@ function App() {
 
   if (trustReady === null) {
     return (
-      <div className={`min-h-screen flex items-center justify-center tt-app-shell text-[#e8eaed]`}>
-        <p className="opacity-60">Loading…</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 tt-app-shell text-[#e8eaed]">
+        <BrandMark size={40} />
+        <p className="text-sm text-[#9aa0a8]">Loading…</p>
       </div>
     );
   }
