@@ -464,7 +464,7 @@ def download_windows_starter(
         "\r\n"
         "echo Running one check cycle…\r\n"
         "echo.\r\n"
-        "python \"%~dp0tonertrack_helper.py\"\r\n"
+        "python \"%~dp0tonertrack_helper.py\" --once\r\n"
         "pause\r\n"
     )
     log.success = True
