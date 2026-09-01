@@ -107,7 +107,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
         (typeof raw === 'string' ? raw.slice(0, 10) : null);
       setTokenPrefix(prefix);
       setRawOnce(raw);
-      setSecondsLeft(90);
+      setSecondsLeft(180);
       setShowFullKey(false);
 
       try {
