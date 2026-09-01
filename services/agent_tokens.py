@@ -10,6 +10,7 @@ from typing import Optional, Tuple
 from sqlalchemy.orm import Session
 
 import models
+from services.db_rls import rls_bypass
 
 TOKEN_BYTES = 32
 PREFIX_LEN = 8
@@ -102,7 +103,8 @@ def verify_agent_token(db: Session, raw: str) -> Optional[models.AgentToken]:
     if not raw or not raw.startswith("tt_"):
         return None
     h = _hash_token(raw)
-    row = db.query(models.AgentToken).filter(models.AgentToken.token_hash == h).first()
+    with rls_bypass(db):
+        row = db.query(models.AgentToken).filter(models.AgentToken.token_hash == h).first()
     if not row or row.revoked_at is not None:
         return None
     return row

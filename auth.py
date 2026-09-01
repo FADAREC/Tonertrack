@@ -81,10 +81,12 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
 
     db = SessionLocal()
     try:
-        row = db.query(models.User).filter(models.User.username == username).first()
+        from services.db_rls import rls_bypass
+        from crud import ensure_user_workspace
+        with rls_bypass(db):
+            row = db.query(models.User).filter(models.User.username == username).first()
         if not row:
             raise credentials_exception
-        from crud import ensure_user_workspace
         try:
             ws_id = ensure_user_workspace(db, row)
         except Exception:

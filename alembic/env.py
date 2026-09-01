@@ -38,6 +38,9 @@ def run_migrations_online():
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
+        # Migrations must see all rows even after FORCE RLS is enabled
+        if connection.dialect.name == "postgresql":
+            connection.exec_driver_sql("SELECT set_config('app.rls_bypass', '1', false)")
         context.configure(connection=connection, target_metadata=target_metadata)
         with context.begin_transaction():
             context.run_migrations()

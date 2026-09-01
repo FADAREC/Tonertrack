@@ -6,6 +6,7 @@ import logging
 from schemas import PrinterCreate, PrinterUpdate, PrinterResponse, PrinterList, ScanRequest
 from database import get_db
 from auth import get_current_user, UserInDB
+from services.db_rls import set_workspace_context
 from crud import create_printer, get_printers, get_printer, update_printer, delete_printer, ensure_user_workspace
 import models
 from services.printer_status import (
@@ -30,7 +31,11 @@ def _require_workspace(db: Session, current_user: UserInDB) -> int:
     if not db_user:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
     try:
-        return ensure_user_workspace(db, db_user)
+        ws = ensure_user_workspace(db, db_user)
+        set_workspace_context(db, ws)
+        return ws
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(
             status_code=500,

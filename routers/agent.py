@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from auth import get_current_user, UserInDB
 from crud import get_printer, get_printers, ensure_user_workspace
+from services.db_rls import set_workspace_context
 from schemas import (
     AgentReportRequest,
     AgentTokenCreate,
@@ -51,7 +52,11 @@ def _workspace_for(db: Session, current_user: UserInDB) -> int:
     if not db_user:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
     try:
-        return ensure_user_workspace(db, db_user)
+        ws = ensure_user_workspace(db, db_user)
+        set_workspace_context(db, ws)
+        return ws
+    except HTTPException:
+        raise
     except Exception:
         raise HTTPException(status_code=500, detail="Could not set up your office.")
 
@@ -103,6 +108,7 @@ def get_agent_from_header(
     row = verify_agent_token(db, raw)
     if not row:
         raise HTTPException(status_code=401, detail="Invalid or revoked agent token")
+    set_workspace_context(db, getattr(row, "workspace_id", None))
     return row
 
 

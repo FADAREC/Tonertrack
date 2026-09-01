@@ -3,40 +3,43 @@ from datetime import datetime, timezone
 import models
 from schemas import PrinterCreate, UserCreate, JobCreate, AlertCreate
 from auth import get_password_hash
+from services.db_rls import rls_bypass, set_workspace_context
 
 
 def ensure_user_workspace(db: Session, user: models.User) -> int:
     """Guarantee every account has a real, private workspace id."""
     def _attach_new() -> int:
-        ws = models.Workspace(name=f"{user.username}'s office")
-        db.add(ws)
-        db.flush()
-        user.workspace_id = ws.id
-        if not user.role or user.role == "operator":
-            user.role = "admin"
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        with rls_bypass(db):
+            ws = models.Workspace(name=f"{user.username}'s office")
+            db.add(ws)
+            db.flush()
+            user.workspace_id = ws.id
+            if not user.role or user.role == "operator":
+                user.role = "admin"
+            db.add(user)
+            db.commit()
+            db.refresh(user)
         return int(user.workspace_id)
 
     if user.workspace_id is not None:
-        ws_row = (
-            db.query(models.Workspace)
-            .filter(models.Workspace.id == user.workspace_id)
-            .first()
-        )
-        if ws_row is None:
-            return _attach_new()
-        others = (
-            db.query(models.User)
-            .filter(models.User.workspace_id == user.workspace_id)
-            .filter(models.User.id != user.id)
-            .count()
-        )
-        legacy = bool(ws_row and (ws_row.name or "").strip().lower() == "legacy office")
-        if others > 0 or legacy:
-            return _attach_new()
-        return int(user.workspace_id)
+        with rls_bypass(db):
+            ws_row = (
+                db.query(models.Workspace)
+                .filter(models.Workspace.id == user.workspace_id)
+                .first()
+            )
+            if ws_row is None:
+                return _attach_new()
+            others = (
+                db.query(models.User)
+                .filter(models.User.workspace_id == user.workspace_id)
+                .filter(models.User.id != user.id)
+                .count()
+            )
+            legacy = bool((ws_row.name or "").strip().lower() == "legacy office")
+            if others > 0 or legacy:
+                return _attach_new()
+            return int(user.workspace_id)
 
     return _attach_new()
 
@@ -44,28 +47,31 @@ def ensure_user_workspace(db: Session, user: models.User) -> int:
 def create_user(db: Session, user: UserCreate, role: str | None = None):
     """Self-serve signup: new workspace, user is admin of that workspace only."""
     hashed_password = get_password_hash(user.password)
-    ws = models.Workspace(name=f"{user.username}'s office")
-    db.add(ws)
-    db.flush()
-    db_user = models.User(
-        username=user.username,
-        email=user.email,
-        hashed_password=hashed_password,
-        role=role or "admin",
-        workspace_id=ws.id,
-    )
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
+    with rls_bypass(db):
+        ws = models.Workspace(name=f"{user.username}'s office")
+        db.add(ws)
+        db.flush()
+        db_user = models.User(
+            username=user.username,
+            email=user.email,
+            hashed_password=hashed_password,
+            role=role or "admin",
+            workspace_id=ws.id,
+        )
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+    set_workspace_context(db, db_user.workspace_id)
     return db_user
 
 
 def get_user_by_login(db: Session, login: str):
-    return (
-        db.query(models.User)
-        .filter((models.User.username == login) | (models.User.email == login))
-        .first()
-    )
+    with rls_bypass(db):
+        return (
+            db.query(models.User)
+            .filter((models.User.username == login) | (models.User.email == login))
+            .first()
+        )
 
 
 def get_users(db: Session, workspace_id: int | None = None):
