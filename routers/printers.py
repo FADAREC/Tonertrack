@@ -52,6 +52,7 @@ def _serialize(p: models.Printer) -> dict:
         "location": p.location or "",
         "page_count": p.page_count or 0,
         "connection_mode": p.connection_mode or "manual",
+        "local_name": getattr(p, "local_name", None) or "",
         "department": p.department or "",
         "access_type": p.access_type or "public",
         "allowed_users": p.allowed_users or [],
@@ -82,7 +83,7 @@ def add_printer(
     """Add a printer. connection_mode=manual never probes the network."""
     mode = (printer.connection_mode or "manual").lower()
     if mode not in {"manual", "snmp", "web", "ping"}:
-        raise HTTPException(status_code=400, detail="connection_mode must be manual, snmp, web, or ping")
+        raise HTTPException(status_code=400, detail="connection_mode must be manual, snmp, web, ping, or local")
 
     ws = _require_workspace(db, current_user)
     existing = get_printers(db, skip=0, limit=1000, workspace_id=ws)

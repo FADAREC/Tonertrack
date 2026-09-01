@@ -4,8 +4,9 @@ TonerTrack office helper - run on a PC on the office LAN.
 
 Automatically:
   - pulls listed printers + poll interval from the server
-  - checks each IP from THIS machine (ping + SNMP toner + web fallback)
-  - posts online/offline + toner_level to the shared dashboard
+  - network printers: checks IP from THIS machine (ping + SNMP + web fallback)
+  - local/USB printers: checks Windows print queue on THIS machine (no IP)
+  - posts online/offline + toner when available to the shared dashboard
 
   set TONERTRACK_URL=https://tonertrack.onrender.com
   set TONERTRACK_AGENT_TOKEN=tt_...
@@ -287,6 +288,99 @@ def probe_printer(ip: str, community: str = "public") -> dict:
     }
 
 
+
+def _powershell_json(script: str):
+    """Run PowerShell and parse JSON; return None on failure."""
+    if platform.system().lower() != "windows":
+        return None
+    try:
+        completed = subprocess.run(
+            [
+                "powershell",
+                "-NoProfile",
+                "-NonInteractive",
+                "-Command",
+                script,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        out = (completed.stdout or "").strip()
+        if completed.returncode != 0 or not out:
+            return None
+        return json.loads(out)
+    except Exception:
+        return None
+
+
+def list_local_printers() -> list[dict]:
+    data = _powershell_json(
+        "Get-Printer | Select-Object Name, PrinterStatus, Type | ConvertTo-Json -Compress"
+    )
+    if data is None:
+        return []
+    if isinstance(data, dict):
+        data = [data]
+    return data if isinstance(data, list) else []
+
+
+def probe_local_printer(windows_name: str) -> dict:
+    """Check a USB/local queue by Windows printer name (must run on that PC)."""
+    name = (windows_name or "").strip()
+    if not name:
+        return {"ok": False, "status": "unknown", "status_detail": "unreachable"}
+
+    if platform.system().lower() != "windows":
+        return {
+            "ok": False,
+            "status": "unknown",
+            "status_detail": "unreachable",
+        }
+
+    # Exact match first, then case-insensitive
+    safe = name.replace("'", "''")
+    data = _powershell_json(
+        f"Get-Printer -Name '{safe}' -ErrorAction SilentlyContinue | "
+        "Select-Object Name, PrinterStatus | ConvertTo-Json -Compress"
+    )
+    if not data:
+        # fallback: list and match
+        for row in list_local_printers():
+            n = str(row.get("Name") or "")
+            if n.lower() == name.lower():
+                data = row
+                break
+    if isinstance(data, list):
+        data = data[0] if data else None
+    if not data:
+        return {"ok": False, "status": "unknown", "status_detail": "unreachable"}
+
+    # PrinterStatus: 0 Other, 1 Unknown, 2 Idle, 3 Printing, 4 Warmup, ...
+    # Also string forms on some hosts
+    st = data.get("PrinterStatus")
+    try:
+        code = int(st)
+    except (TypeError, ValueError):
+        code = None
+        text = str(st or "").lower()
+        if any(x in text for x in ("error", "offline", "paused", "not available")):
+            return {"ok": False, "status": "unknown", "status_detail": "unreachable"}
+        if any(x in text for x in ("idle", "printing", "warmup", "normal", "ready")):
+            return {"ok": True, "status": "online", "status_detail": None}
+        return {"ok": True, "status": "online", "status_detail": None}
+
+    # MSDN-ish: 1 unknown, 2 idle, 3 printing, 4 warmup are fine; high bits often errors
+    if code in (2, 3, 4, 5, 6):
+        return {"ok": True, "status": "online", "status_detail": None}
+    if code in (1, 0):
+        return {"ok": True, "status": "online", "status_detail": None}
+    # 7+ often paused/error/offline depending on driver
+    if code >= 7:
+        return {"ok": False, "status": "unknown", "status_detail": "unreachable"}
+    return {"ok": True, "status": "online", "status_detail": None}
+
+
 def report(base: str, token: str, printer_id: int, result: dict) -> dict:
     body = {"printer_id": printer_id, **result}
     return api(f"{base}/agent/report", token, method="POST", body=body)
@@ -302,15 +396,23 @@ def cycle(base: str, token: str, community: str) -> int:
         pid = p["id"]
         ip = p.get("ip_address")
         name = p.get("name") or str(pid)
-        if not ip:
-            continue
-        result = probe_printer(ip, community)
+        mode = (p.get("connection_mode") or "manual").lower()
+        if mode == "local":
+            win_name = (p.get("local_name") or name or "").strip()
+            result = probe_local_printer(win_name)
+            target_label = f"local:{win_name}"
+        else:
+            if not ip:
+                print(f"  [{pid}] {name} skipped (no IP)", flush=True)
+                continue
+            result = probe_printer(ip, community)
+            target_label = ip
         try:
             out = report(base, token, pid, result)
             status = out.get("status") or result.get("status") or result.get("status_detail")
             toner = out.get("toner_level")
             extra = f" toner={toner}%" if toner is not None else ""
-            print(f"  [{pid}] {name} ({ip}) -> {status}{extra}", flush=True)
+            print(f"  [{pid}] {name} ({target_label}) -> {status}{extra}", flush=True)
         except urllib.error.HTTPError as e:
             err = e.read().decode("utf-8", errors="replace")
             print(f"  [{pid}] {name} report failed HTTP {e.code}: {err}", flush=True)

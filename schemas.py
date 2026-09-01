@@ -38,7 +38,8 @@ class PrinterCreate(BaseModel):
     name: str
     ip_address: Optional[str] = None
     location: Optional[str] = ""
-    connection_mode: str = "manual"  # snmp | web | ping | manual
+    connection_mode: str = "manual"  # snmp | web | ping | manual | local
+    local_name: Optional[str] = None  # Windows printer name when mode=local
     snmp_community: str = "public"
     department: Optional[str] = ""
     access_type: str = "public"
@@ -56,6 +57,7 @@ class PrinterUpdate(BaseModel):
     toner_level: Optional[int] = None
     status: Optional[str] = None
     connection_mode: Optional[str] = None
+    local_name: Optional[str] = None
     notes: Optional[str] = None
     ip_address: Optional[str] = None
 
@@ -79,6 +81,7 @@ class PrinterResponse(BaseModel):
     stale: bool = False
     fail_streak: int = 0
     connection_mode: str = "manual"
+    local_name: Optional[str] = None
     department: Optional[str] = ""
     access_type: str = "public"
     allowed_users: List[str] = Field(default_factory=list)

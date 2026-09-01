@@ -179,8 +179,12 @@ def agent_report(
     printer = get_printer(db, body.printer_id, workspace_id=getattr(agent, "workspace_id", None))
     if not printer:
         raise HTTPException(status_code=404, detail="Printer not found")
-    if not printer.ip_address:
-        raise HTTPException(status_code=400, detail="Printer has no IP on allow-list")
+    mode = (printer.connection_mode or "manual").lower()
+    if mode == "local":
+        if not (getattr(printer, "local_name", None) or printer.name):
+            raise HTTPException(status_code=400, detail="Local printer has no Windows name on the board")
+    elif not printer.ip_address:
+        raise HTTPException(status_code=400, detail="Network printer has no IP on the board")
 
     updated = apply_agent_result(
         db,
@@ -219,13 +223,24 @@ def agent_fleet(
     rows = get_printers(db, skip=0, limit=500, workspace_id=ws)
     targets = []
     for p in rows:
+        mode = (p.connection_mode or "manual").lower()
+        if mode == "local":
+            targets.append({
+                "id": p.id,
+                "name": p.name,
+                "ip_address": p.ip_address,
+                "local_name": getattr(p, "local_name", None) or p.name,
+                "connection_mode": "local",
+            })
+            continue
         if not p.ip_address:
             continue
         targets.append({
             "id": p.id,
             "name": p.name,
             "ip_address": p.ip_address,
-            "connection_mode": p.connection_mode or "manual",
+            "local_name": getattr(p, "local_name", None),
+            "connection_mode": mode,
         })
     touch_last_used(db, agent)
     return {"printers": targets, "count": len(targets)}

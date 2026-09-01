@@ -30,6 +30,7 @@ class Printer(Base):
     last_attempt_at = Column(DateTime, nullable=True)
     fail_streak = Column(Integer, default=0, nullable=False)
     connection_mode = Column(String, default="manual")
+    local_name = Column(String, nullable=True)  # Windows queue name for USB/local
     snmp_community = Column(String, default="public")
     department = Column(String, default="")
     access_type = Column(String, default="public")

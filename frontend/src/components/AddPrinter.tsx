@@ -9,6 +9,7 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
   const [form, setForm] = useState({
     name: '',
     ip_address: '',
+    local_name: '',
     connection_mode: 'manual',
     snmp_community: 'public',
   });
@@ -20,8 +21,9 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
     setLoading(true);
     try {
       await printersAPI.add({
-        name: form.name || form.ip_address || 'Printer',
-        ip_address: form.ip_address || undefined,
+        name: form.name || form.local_name || form.ip_address || 'Printer',
+        ip_address: form.connection_mode === 'local' ? undefined : form.ip_address || undefined,
+        local_name: form.connection_mode === 'local' ? (form.local_name || form.name) : undefined,
         connection_mode: form.connection_mode,
         snmp_community: form.snmp_community,
       });
@@ -53,7 +55,7 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
         <div>
           <h1 className="tt-display text-2xl tracking-wide">Add printer</h1>
           <p className="text-sm text-[#9aa0a8] mt-1">
-            List only devices you want on the board. IP is required for the office checker.
+            Network printers need an IP. USB/local printers need the Windows queue name. One office can mix both.
           </p>
         </div>
       </div>
@@ -70,16 +72,34 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
             className="tt-input"
           />
         </label>
-        <label className="block space-y-1">
-          <span className="text-xs text-[#9aa0a8]">IP address</span>
-          <input
-            type="text"
-            value={form.ip_address}
-            onChange={(e) => setForm({ ...form, ip_address: e.target.value })}
-            placeholder="10.0.0.25"
-            className="tt-input tt-lcd"
-          />
-        </label>
+        {form.connection_mode === 'local' ? (
+          <label className="block space-y-1">
+            <span className="text-xs text-[#9aa0a8]">Windows printer name</span>
+            <input
+              type="text"
+              value={form.local_name}
+              onChange={(e) => setForm({ ...form, local_name: e.target.value })}
+              placeholder="Exact name under Printers & scanners"
+              required
+              className="tt-input"
+            />
+            <span className="text-[11px] text-[#9aa0a8]">
+              Run the office checker on the PC this printer is installed on. Mixed offices: add network
+              printers with IP and local ones with this name — one helper run covers both.
+            </span>
+          </label>
+        ) : (
+          <label className="block space-y-1">
+            <span className="text-xs text-[#9aa0a8]">IP address</span>
+            <input
+              type="text"
+              value={form.ip_address}
+              onChange={(e) => setForm({ ...form, ip_address: e.target.value })}
+              placeholder="10.0.0.25"
+              className="tt-input tt-lcd"
+            />
+          </label>
+        )}
         <label className="block space-y-1">
           <span className="text-xs text-[#9aa0a8]">How it’s listed</span>
           <select
@@ -87,10 +107,11 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
             onChange={(e) => setForm({ ...form, connection_mode: e.target.value })}
             className="tt-input"
           >
-            <option value="manual">Manual</option>
-            <option value="web">Web</option>
-            <option value="snmp">SNMP</option>
-            <option value="ping">Ping</option>
+            <option value="manual">Manual (no auto check)</option>
+            <option value="local">Local / USB (this PC&apos;s Windows queue)</option>
+            <option value="ping">Network (ping)</option>
+            <option value="snmp">Network (SNMP)</option>
+            <option value="web">Network (web)</option>
           </select>
         </label>
         {form.connection_mode === 'snmp' && (
