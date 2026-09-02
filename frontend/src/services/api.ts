@@ -66,6 +66,7 @@ export const printersAPI = {
   add: (data: {
     name: string;
     ip_address?: string;
+    local_name?: string;
     location?: string;
     department?: string;
     connection_mode?: string;
