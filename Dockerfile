@@ -19,4 +19,5 @@ COPY . .
 COPY --from=frontend /fe/build ./frontend/build
 ENV PORT=10000
 EXPOSE 10000
+# Shell form so $PORT from Render is expanded. Bind 0.0.0.0 so the port scan succeeds.
 CMD uvicorn main:app --host 0.0.0.0 --port ${PORT}

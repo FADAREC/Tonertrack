@@ -43,7 +43,15 @@ elif not SECRET_KEY:
     auth_mod.SECRET_KEY = os.environ["JWT_SECRET_KEY"]
     SECRET_KEY = auth_mod.SECRET_KEY
 
-models.Base.metadata.create_all(bind=engine)
+# Schema bootstrap — must not prevent the process from binding PORT on Render
+try:
+    models.Base.metadata.create_all(bind=engine)
+except Exception as _create_err:
+    import logging
+    logging.getLogger("uvicorn.error").error(
+        "Database unreachable at startup (create_all): %s", _create_err
+    )
+
 # Apply additive migrations when present (Alembic)
 try:
     from alembic.config import Config
