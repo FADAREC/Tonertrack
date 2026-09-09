@@ -10,7 +10,7 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
     name: '',
     ip_address: '',
     local_name: '',
-    connection_mode: 'manual',
+    connection_mode: 'local',
     snmp_community: 'public',
   });
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,9 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
         window.location.href = '/';
       }, 1200);
     } catch (err: any) {
-      toast.error(err.response?.data?.detail || 'Add failed');
+      const d = err.response?.data?.detail;
+      const msg = Array.isArray(d) ? d.map((x: any) => x.msg || JSON.stringify(x)).join('; ') : d;
+      toast.error(msg || err.message || 'Could not add printer');
     } finally {
       setLoading(false);
     }
@@ -62,7 +64,7 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
 
       <div className="tt-card p-4 space-y-3">
         <label className="block space-y-1">
-          <span className="text-xs text-[#9aa0a8]">Name</span>
+          <span className="text-xs text-[#9aa0a8]">Name on the board</span>
           <input
             type="text"
             value={form.name}
@@ -72,6 +74,20 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
             className="tt-input"
           />
         </label>
+        <label className="block space-y-1">
+          <span className="text-xs text-[#9aa0a8]">How to check it</span>
+          <select
+            value={form.connection_mode}
+            onChange={(e) => setForm({ ...form, connection_mode: e.target.value })}
+            className="tt-input"
+          >
+            <option value="local">Local / USB (Windows queue on an office PC)</option>
+            <option value="manual">Manual (no auto check)</option>
+            <option value="ping">Network (ping)</option>
+            <option value="snmp">Network (SNMP)</option>
+            <option value="web">Network (web)</option>
+          </select>
+        </label>
         {form.connection_mode === 'local' ? (
           <label className="block space-y-1">
             <span className="text-xs text-[#9aa0a8]">Windows printer name</span>
@@ -79,16 +95,15 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
               type="text"
               value={form.local_name}
               onChange={(e) => setForm({ ...form, local_name: e.target.value })}
-              placeholder="Exact name under Printers & scanners"
+              placeholder="Exact name under Printers and scanners"
               required
               className="tt-input"
             />
             <span className="text-[11px] text-[#9aa0a8]">
-              Run the office checker on the PC this printer is installed on. Mixed offices: add network
-              printers with IP and local ones with this name — one helper run covers both.
+              Must match the name on the PC where the checker runs. Network printers use IP instead.
             </span>
           </label>
-        ) : (
+        ) : form.connection_mode !== 'manual' ? (
           <label className="block space-y-1">
             <span className="text-xs text-[#9aa0a8]">IP address</span>
             <input
@@ -99,21 +114,7 @@ const AddPrinter: React.FC<{ darkMode: boolean }> = () => {
               className="tt-input tt-lcd"
             />
           </label>
-        )}
-        <label className="block space-y-1">
-          <span className="text-xs text-[#9aa0a8]">How it’s listed</span>
-          <select
-            value={form.connection_mode}
-            onChange={(e) => setForm({ ...form, connection_mode: e.target.value })}
-            className="tt-input"
-          >
-            <option value="manual">Manual (no auto check)</option>
-            <option value="local">Local / USB (this PC&apos;s Windows queue)</option>
-            <option value="ping">Network (ping)</option>
-            <option value="snmp">Network (SNMP)</option>
-            <option value="web">Network (web)</option>
-          </select>
-        </label>
+        ) : null}
         {form.connection_mode === 'snmp' && (
           <label className="block space-y-1">
             <span className="text-xs text-[#9aa0a8]">SNMP community</span>

@@ -82,8 +82,21 @@ def add_printer(
 ):
     """Add a printer. connection_mode=manual never probes the network."""
     mode = (printer.connection_mode or "manual").lower()
-    if mode not in {"manual", "snmp", "web", "ping"}:
-        raise HTTPException(status_code=400, detail="connection_mode must be manual, snmp, web, ping, or local")
+    if mode not in {"manual", "snmp", "web", "ping", "local"}:
+        raise HTTPException(
+            status_code=400,
+            detail="connection_mode must be manual, snmp, web, ping, or local",
+        )
+    if mode == "local":
+        local = (printer.local_name or printer.name or "").strip()
+        if not local:
+            raise HTTPException(
+                status_code=400,
+                detail="Local/USB printers need the Windows printer name (Printers & scanners).",
+            )
+        # Keep board name and queue name aligned when only one is filled
+        if not (printer.local_name or "").strip():
+            printer.local_name = local
 
     ws = _require_workspace(db, current_user)
     existing = get_printers(db, skip=0, limit=1000, workspace_id=ws)
