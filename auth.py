@@ -22,6 +22,7 @@ class UserInDB(BaseModel):
     username: str
     email: str
     role: str = "operator"
+    workspace_id: int | None = None
 
 
 def require_secrets() -> None:
@@ -63,6 +64,7 @@ def create_refresh_token(data: dict) -> str:
 
 
 def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
+    """Validate JWT and load user. Prefer workspace_id from token to avoid extra DB work."""
     from database import SessionLocal
     import models
 
@@ -76,23 +78,37 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         username: str | None = payload.get("sub")
         if username is None or payload.get("type") != "access":
             raise credentials_exception
+        token_ws = payload.get("workspace_id")
+        if token_ws is not None:
+            try:
+                token_ws = int(token_ws)
+            except (TypeError, ValueError):
+                token_ws = None
     except JWTError:
         raise credentials_exception
 
     db = SessionLocal()
     try:
         from services.db_rls import rls_bypass
-        from crud import ensure_user_workspace
         with rls_bypass(db):
-            row = db.query(models.User).filter(models.User.username == username).first()
+            row = (
+                db.query(models.User)
+                .filter(models.User.username == username)
+                .first()
+            )
         if not row:
             raise credentials_exception
-        try:
-            from sqlalchemy import text
-            db.execute(text("SET LOCAL app.rls_bypass = '1'"))
-            ws_id = ensure_user_workspace(db, row)
-        except Exception:
-            ws_id = getattr(row, "workspace_id", None)
+
+        ws_id = getattr(row, "workspace_id", None) or token_ws
+        if not ws_id:
+            try:
+                from crud import ensure_user_workspace
+                from sqlalchemy import text
+                db.execute(text("SET LOCAL app.rls_bypass = '1'"))
+                ws_id = ensure_user_workspace(db, row)
+            except Exception:
+                ws_id = getattr(row, "workspace_id", None)
+
         return UserInDB(
             username=row.username,
             email=row.email or "",

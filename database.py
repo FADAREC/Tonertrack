@@ -19,9 +19,11 @@ engine_kwargs = {"pool_pre_ping": True}
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     connect_args = {"check_same_thread": False}
 else:
-    # Managed Postgres (Render): recycle connections
-    engine_kwargs["pool_size"] = 5
-    engine_kwargs["max_overflow"] = 10
+    # Managed Postgres: keep a warm pool (Render / Supabase)
+    engine_kwargs["pool_size"] = 8
+    engine_kwargs["max_overflow"] = 12
+    engine_kwargs["pool_recycle"] = 280
+    engine_kwargs["pool_timeout"] = 15
 
 engine = create_engine(
     SQLALCHEMY_DATABASE_URL,

@@ -35,17 +35,17 @@ class ScanRequest(BaseModel):
 
 
 class PrinterCreate(BaseModel):
-    name: str
-    ip_address: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=120)
+    ip_address: Optional[str] = Field(None, max_length=64)
     location: Optional[str] = ""
     connection_mode: str = "manual"  # snmp | web | ping | manual | local
-    local_name: Optional[str] = None  # Windows printer name when mode=local
+    local_name: Optional[str] = Field(None, max_length=200)  # Windows printer name when mode=local
     snmp_community: str = "public"
     department: Optional[str] = ""
     access_type: str = "public"
     allowed_users: List[str] = Field(default_factory=list)
     toner_level: Optional[int] = None  # for manual mode
-    notes: Optional[str] = ""
+    notes: Optional[str] = Field(None, max_length=2000)
 
 
 class PrinterUpdate(BaseModel):

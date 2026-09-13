@@ -23,8 +23,15 @@ router = APIRouter(prefix="/printers", tags=["printers"])
 FREE_PRINTER_CAP = 40  # one office floor; Goal 1 coverage
 
 def _require_workspace(db: Session, current_user: UserInDB) -> int:
+    """Resolve workspace for this request. Prefer JWT claim, then DB."""
     from services.db_rls import rls_bypass
     from sqlalchemy import text
+
+    claimed = getattr(current_user, "workspace_id", None)
+    if claimed:
+        set_workspace_context(db, int(claimed))
+        return int(claimed)
+
     with rls_bypass(db):
         try:
             db.execute(text("SET LOCAL app.rls_bypass = '1'"))

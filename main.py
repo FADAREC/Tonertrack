@@ -4,6 +4,7 @@ from pathlib import Path
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
+from services.security_http import SecurityHeadersMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
@@ -150,6 +151,7 @@ _cors = os.getenv(
 )
 allow_origins = [o.strip() for o in _cors.split(",") if o.strip()]
 
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
@@ -167,18 +169,9 @@ def health(db: Session = Depends(get_db)):
     try:
         from sqlalchemy import text
         db.execute(text("SELECT 1"))
-        # Record uptime/bot pings so we can see probe activity in DB
-        try:
-            db.add(models.SiteVisit(path="/health"))
-            db.commit()
-        except Exception:
-            try:
-                db.rollback()
-            except Exception:
-                pass
         return {"status": "ok", "database": "ok"}
-    except Exception as e:
-        return {"status": "degraded", "database": str(e)}
+    except Exception:
+        return {"status": "degraded", "database": "error"}
 
 
 @app.get("/trust/info", response_model=TrustInfo)
@@ -252,16 +245,29 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Username must be at least 3 characters.")
     if len(user.password) < 6:
         raise HTTPException(status_code=400, detail="Password must be at least 6 characters.")
+    if len(user.password) > 128:
+        raise HTTPException(status_code=400, detail="Password is too long.")
     if get_user_by_login(db, user.username.strip()):
         raise HTTPException(status_code=400, detail="That username is already taken.")
     if get_user_by_login(db, str(user.email).lower()):
         raise HTTPException(status_code=400, detail="That email is already registered.")
     created = create_user(db, user)
+    ws = getattr(created, "workspace_id", None)
     access_token = create_access_token(
-        data={"sub": created.username, "email": created.email, "role": created.role}
+        data={
+            "sub": created.username,
+            "email": created.email,
+            "role": created.role,
+            "workspace_id": ws,
+        }
     )
     refresh_token = create_refresh_token(
-        data={"sub": created.username, "email": created.email, "role": created.role}
+        data={
+            "sub": created.username,
+            "email": created.email,
+            "role": created.role,
+            "workspace_id": ws,
+        }
     )
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
@@ -276,11 +282,28 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         db.add(user)
         db.commit()
     role = getattr(user, "role", None) or "admin"
+    ws = getattr(user, "workspace_id", None)
+    if not ws:
+        try:
+            from crud import ensure_user_workspace
+            ws = ensure_user_workspace(db, user)
+        except Exception:
+            ws = None
     access_token = create_access_token(
-        data={"sub": user.username, "email": user.email, "role": role}
+        data={
+            "sub": user.username,
+            "email": user.email,
+            "role": role,
+            "workspace_id": ws,
+        }
     )
     refresh_token = create_refresh_token(
-        data={"sub": user.username, "email": user.email, "role": role}
+        data={
+            "sub": user.username,
+            "email": user.email,
+            "role": role,
+            "workspace_id": ws,
+        }
     )
     return {"access_token": access_token, "refresh_token": refresh_token, "token_type": "bearer"}
 
