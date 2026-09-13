@@ -52,6 +52,50 @@ except Exception as _create_err:
         "Database unreachable at startup (create_all): %s", _create_err
     )
 
+# Emergency schema fixes when Alembic lags behind
+try:
+    from sqlalchemy import text
+    from database import SessionLocal as _BootSession
+    _boot = _BootSession()
+    try:
+        if _boot.bind.dialect.name == "postgresql":
+            _boot.execute(text("ALTER TABLE IF EXISTS printers ADD COLUMN IF NOT EXISTS local_name VARCHAR"))
+            _boot.execute(text("ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS workspace_id INTEGER"))
+            _boot.execute(text("ALTER TABLE IF EXISTS printers ADD COLUMN IF NOT EXISTS workspace_id INTEGER"))
+            for _tbl in (
+                "workspaces", "users", "printers", "agent_tokens", "settings", "audit_events",
+                "status_checks", "helper_download_logs", "alerts", "jobs", "trust_preferences",
+            ):
+                _boot.execute(text(f"ALTER TABLE IF EXISTS {_tbl} NO FORCE ROW LEVEL SECURITY"))
+                _boot.execute(text(f"ALTER TABLE IF EXISTS {_tbl} DISABLE ROW LEVEL SECURITY"))
+            _boot.execute(text(
+                "DO $bf$\n"
+                "DECLARE r RECORD;\n"
+                "  new_ws INT;\n"
+                "BEGIN\n"
+                "  IF NOT EXISTS (\n"
+                "    SELECT 1 FROM information_schema.tables\n"
+                "    WHERE table_schema = 'public' AND table_name = 'workspaces'\n"
+                "  ) THEN\n"
+                "    RETURN;\n"
+                "  END IF;\n"
+                "  FOR r IN SELECT id, username FROM users WHERE workspace_id IS NULL\n"
+                "  LOOP\n"
+                "    INSERT INTO workspaces (name)\n"
+                "      VALUES (COALESCE(r.username, 'user') || E'\\'s office')\n"
+                "      RETURNING id INTO new_ws;\n"
+                "    UPDATE users SET workspace_id = new_ws WHERE id = r.id;\n"
+                "  END LOOP;\n"
+                "END\n"
+                "$bf$;"
+            ))
+            _boot.commit()
+    finally:
+        _boot.close()
+except Exception as _boot_err:
+    import logging as _logging
+    _logging.getLogger("uvicorn.error").warning("Schema bootstrap skipped: %s", _boot_err)
+
 # Apply additive migrations when present (Alembic)
 try:
     from alembic.config import Config
