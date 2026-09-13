@@ -90,21 +90,19 @@ def _interval_label(seconds: int) -> str:
 
 
 def get_agent_from_header(
-    authorization: Optional[str] = Header(None),
     x_agent_token: Optional[str] = Header(None, alias="X-Agent-Token"),
     db: Session = Depends(get_db),
 ) -> models.AgentToken:
     """
-    Auth on every report. Prefer Authorization: Bearer <token> or X-Agent-Token.
-    Never caches across requests.
+    Auth on every agent request via X-Agent-Token only.
+    Authorization: Bearer is reserved for user JWTs and is rejected here.
     """
-    raw = None
-    if x_agent_token:
-        raw = x_agent_token.strip()
-    elif authorization and authorization.lower().startswith("bearer "):
-        raw = authorization[7:].strip()
+    raw = (x_agent_token or "").strip()
     if not raw:
-        raise HTTPException(status_code=401, detail="Agent token required")
+        raise HTTPException(
+            status_code=401,
+            detail="Agent token required in X-Agent-Token header",
+        )
     row = verify_agent_token(db, raw)
     if not row:
         raise HTTPException(status_code=401, detail="Invalid or revoked agent token")
