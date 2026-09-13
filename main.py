@@ -436,7 +436,20 @@ if STATIC_DIR.is_dir():
     @app.get("/{full_path:path}")
     async def spa_fallback(full_path: str):
         first = full_path.split("/")[0]
-        if first in _API_ROOTS or full_path == "openapi.json":
+        # Never SPA-mask probe paths (scanners treat 200 HTML as interesting)
+        sensitive = {
+            ".env", ".git", ".git/config", "debug", "admin", "metrics",
+            "server-status", "graphql", "api", "wp-admin", "config.json",
+        }
+        lowered = full_path.lower().strip("/")
+        if (
+            first in _API_ROOTS
+            or full_path == "openapi.json"
+            or lowered in sensitive
+            or lowered.startswith(".env")
+            or lowered.startswith(".git")
+            or ".." in full_path
+        ):
             raise HTTPException(status_code=404, detail="Not found")
         # Serve built root assets (favicon.svg, logo.svg, manifest, etc.)
         candidate = STATIC_DIR / full_path
