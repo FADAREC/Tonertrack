@@ -13,9 +13,9 @@ from starlette.responses import JSONResponse, Response
 
 # path prefix -> (max_events, window_seconds)
 RATE_LIMITS: dict[str, tuple[int, int]] = {
-    "/login": (20, 60),
-    "/register": (8, 60),
-    "/refresh": (30, 60),
+    "/login": (12, 60),
+    "/register": (5, 60),
+    "/refresh": (20, 60),
 }
 
 _lock = threading.Lock()

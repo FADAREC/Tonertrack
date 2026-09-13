@@ -366,6 +366,10 @@ def download_helper(
         path=str(helper_path),
         filename="tonertrack_helper.py",
         media_type="text/x-python",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+        },
     )
 
 
@@ -494,5 +498,9 @@ def download_windows_starter(
     return Response(
         content=bat,
         media_type="application/octet-stream",
-        headers={"Content-Disposition": "attachment; filename=Run-TonerTrack-Checker.bat"},
+        headers={
+            "Content-Disposition": "attachment; filename=Run-TonerTrack-Checker.bat",
+            "Cache-Control": "no-store, no-cache, must-revalidate",
+            "Pragma": "no-cache",
+        },
     )
