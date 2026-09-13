@@ -23,23 +23,32 @@ router = APIRouter(prefix="/printers", tags=["printers"])
 FREE_PRINTER_CAP = 40  # one office floor; Goal 1 coverage
 
 def _require_workspace(db: Session, current_user: UserInDB) -> int:
-    db_user = (
-        db.query(models.User)
-        .filter(models.User.username == current_user.username)
-        .first()
-    )
+    from services.db_rls import rls_bypass
+    from sqlalchemy import text
+    with rls_bypass(db):
+        try:
+            db.execute(text("SET LOCAL app.rls_bypass = '1'"))
+        except Exception:
+            pass
+        db_user = (
+            db.query(models.User)
+            .filter(models.User.username == current_user.username)
+            .first()
+        )
     if not db_user:
         raise HTTPException(status_code=401, detail="Could not validate credentials")
     try:
         ws = ensure_user_workspace(db, db_user)
+        if not ws:
+            raise RuntimeError("no workspace")
         set_workspace_context(db, ws)
-        return ws
+        return int(ws)
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=500,
-            detail="Could not set up your office. Sign out, sign in again, or contact support.",
+            detail=f"Could not set up your office. Sign out and sign in again. ({type(e).__name__})",
         )
 
 

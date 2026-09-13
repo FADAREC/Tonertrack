@@ -29,8 +29,18 @@ def clear_workspace_context(db: Session) -> None:
 @contextmanager
 def rls_bypass(db: Session):
     """Temporarily allow cross-workspace reads/writes (auth lookup, signup)."""
-    db.execute(text("SELECT set_config('app.rls_bypass', '1', true)"))
+    # SET LOCAL is transaction-scoped and works more reliably through poolers
+    try:
+        db.execute(text("SET LOCAL app.rls_bypass = '1'"))
+    except Exception:
+        try:
+            db.execute(text("SELECT set_config('app.rls_bypass', '1', true)"))
+        except Exception:
+            pass
     try:
         yield
     finally:
-        db.execute(text("SELECT set_config('app.rls_bypass', '', true)"))
+        try:
+            db.execute(text("SELECT set_config('app.rls_bypass', '', true)"))
+        except Exception:
+            pass

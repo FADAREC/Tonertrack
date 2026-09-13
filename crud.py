@@ -46,11 +46,15 @@ def ensure_user_workspace(db: Session, user: models.User) -> int:
 
 def create_user(db: Session, user: UserCreate, role: str | None = None):
     """Self-serve signup: new workspace, user is admin of that workspace only."""
+    from sqlalchemy import text
     hashed_password = get_password_hash(user.password)
     with rls_bypass(db):
+        db.execute(text("SET LOCAL app.rls_bypass = '1'"))
         ws = models.Workspace(name=f"{user.username}'s office")
         db.add(ws)
         db.flush()
+        if ws.id is None:
+            raise RuntimeError("workspace insert failed")
         db_user = models.User(
             username=user.username,
             email=user.email,
@@ -61,6 +65,9 @@ def create_user(db: Session, user: UserCreate, role: str | None = None):
         db.add(db_user)
         db.commit()
         db.refresh(db_user)
+    if not db_user.workspace_id:
+        # Last-chance attach (should not happen)
+        return ensure_user_workspace(db, db_user) and db_user
     set_workspace_context(db, db_user.workspace_id)
     return db_user
 

@@ -88,9 +88,10 @@ def get_current_user(token: str = Depends(oauth2_scheme)) -> UserInDB:
         if not row:
             raise credentials_exception
         try:
+            from sqlalchemy import text
+            db.execute(text("SET LOCAL app.rls_bypass = '1'"))
             ws_id = ensure_user_workspace(db, row)
         except Exception:
-            # Last resort: still reject empty workspace rather than leak global data
             ws_id = getattr(row, "workspace_id", None)
         return UserInDB(
             username=row.username,
