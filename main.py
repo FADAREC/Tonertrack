@@ -122,9 +122,14 @@ except Exception as _ws_err:
     import logging
     logging.getLogger("uvicorn.error").warning("Workspace backfill skipped: %s", _ws_err)
 
+# Hide OpenAPI UI in production (attack surface map)
+_is_prod = (_env == "production") or bool(os.getenv("RENDER"))
 app = FastAPI(
     title="TonerTrack",
     version="1.0.0",
+    docs_url=None if _is_prod else "/docs",
+    redoc_url=None if _is_prod else "/redoc",
+    openapi_url=None if _is_prod else "/openapi.json",
     description=(
         "TonerTrack is a shared board for office printers.\n\n"
         "**In plain language:** your team sees which printers are online, low on toner, "
