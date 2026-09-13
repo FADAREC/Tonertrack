@@ -1,6 +1,17 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List, Literal
 from datetime import datetime
+
+def reject_html(value: Optional[str]) -> Optional[str]:
+    """Block obvious HTML/script payloads in free-text fields."""
+    if value is None:
+        return None
+    s = str(value)
+    lowered = s.lower()
+    if "<" in s or ">" in s or "</" in lowered or "javascript:" in lowered:
+        raise ValueError("HTML or script content is not allowed")
+    return s
+
 
 
 class UserLogin(BaseModel):
@@ -37,15 +48,20 @@ class ScanRequest(BaseModel):
 class PrinterCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=120)
     ip_address: Optional[str] = Field(None, max_length=64)
-    location: Optional[str] = ""
+    location: Optional[str] = Field("", max_length=200)
     connection_mode: str = "manual"  # snmp | web | ping | manual | local
     local_name: Optional[str] = Field(None, max_length=200)  # Windows printer name when mode=local
-    snmp_community: str = "public"
-    department: Optional[str] = ""
+    snmp_community: str = Field("public", max_length=64)
+    department: Optional[str] = Field("", max_length=120)
     access_type: str = "public"
     allowed_users: List[str] = Field(default_factory=list)
     toner_level: Optional[int] = None  # for manual mode
     notes: Optional[str] = Field(None, max_length=2000)
+
+    @field_validator("name", "local_name", "notes", "location", "department", mode="before")
+    @classmethod
+    def validate_no_html_create(cls, v):
+        return reject_html(v)
 
 
 class PrinterUpdate(BaseModel):
@@ -60,6 +76,11 @@ class PrinterUpdate(BaseModel):
     local_name: Optional[str] = None
     notes: Optional[str] = None
     ip_address: Optional[str] = None
+
+    @field_validator("name", "local_name", "notes", "location", "department", mode="before")
+    @classmethod
+    def validate_no_html_update(cls, v):
+        return reject_html(v)
 
 
 class PrinterResponse(BaseModel):
