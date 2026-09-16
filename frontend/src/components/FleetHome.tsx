@@ -8,6 +8,7 @@ interface PrinterRow {
   id: number;
   name: string;
   ip_address?: string;
+  local_name?: string;
   location?: string;
   department?: string;
   status: string;
@@ -250,7 +251,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
         <div className="tt-card px-4 py-3 space-y-2">
           <p className="text-sm font-medium text-[#f2f5ff]">Get the board useful for support</p>
           <ul className="text-xs text-[#8b9bb8] space-y-1">
-            <li>{printers.length > 0 ? 'Done' : 'Next'}: Add the printers on this floor (with network addresses).</li>
+            <li>{printers.length > 0 ? 'Done' : 'Next'}: Add the printers on this floor (network IP or USB / Windows name).</li>
             <li>{freshCount > 0 ? 'Done' : 'Next'}: Run the office checker so status stays current.</li>
             <li>Support opens this board first when a printer problem is reported.</li>
           </ul>
@@ -379,7 +380,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
               <Plus className="h-4 w-4" /> Add first printer
             </Link>
             <Link to="/helper" className="tt-btn tt-btn-ghost">
-              Set up office computer
+              Set up office checker
             </Link>
           </div>
         </div>
@@ -429,13 +430,18 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                     <p className="font-medium text-[#f2f5ff] truncate">{p.name}</p>
                     <p className="text-xs text-[#8b9bb8] truncate">
                       {[p.location, p.department].filter(Boolean).join(' · ') || 'No location'}
-                      {p.ip_address ? (
+                      {p.connection_mode === 'local' || p.local_name ? (
+                        <>
+                          {' · '}
+                          <span className="tt-mono">{p.local_name || 'Local / USB'}</span>
+                        </>
+                      ) : p.ip_address ? (
                         <>
                           {' · '}
                           <span className="tt-mono">{p.ip_address}</span>
                         </>
                       ) : (
-                        <span className="text-[#5c6b86]"> · No IP</span>
+                        <span className="text-[#5c6b86]"> · No address</span>
                       )}
                     </p>
                     <p className={`text-xs mt-1 ${p.stale ? 'text-[#ffb14a]' : 'text-[#8b9bb8]'}`}>{ageText(p)}</p>
@@ -516,7 +522,13 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                     <p>Status detail · {p.status_detail ? p.status_detail.replace(/_/g, ' ') : 'n/a'}</p>
                     <p>Fail streak · {p.fail_streak ?? 0}</p>
                     <p>{ageText(p)}</p>
-                    <p className="tt-mono">{p.ip_address || 'No IP for helper'}</p>
+                    <p className="tt-mono">
+                      {p.connection_mode === 'local' || p.local_name
+                        ? `Windows name · ${p.local_name || '—'}`
+                        : p.ip_address
+                          ? p.ip_address
+                          : 'No address for helper'}
+                    </p>
                   </div>
                   <div className="space-y-1 pt-3">
                     <div className="flex items-center justify-between gap-2">
