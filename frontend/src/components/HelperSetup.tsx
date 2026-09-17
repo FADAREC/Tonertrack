@@ -25,6 +25,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
   const [showFullKey, setShowFullKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [busyPhase, setBusyPhase] = useState<'idle' | 'creating' | 'downloading'>('idle');
   const [copied, setCopied] = useState(false);
   const [downloaded, setDownloaded] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -95,6 +96,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
   /** Create key and download starter in one shot so the secret is not required on screen. */
   const createKeyAndDownload = async () => {
     setBusy(true);
+    setBusyPhase('creating');
     setError('');
     clearSecret();
     setDownloaded(false);
@@ -111,6 +113,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       setShowFullKey(false);
 
       try {
+        setBusyPhase('downloading');
         await downloadWithRaw(raw);
         toast.success('Key created and starter downloaded');
       } catch (dlErr: any) {
@@ -125,6 +128,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       setError(e?.response?.data?.detail || 'Could not create access key');
     } finally {
       setBusy(false);
+      setBusyPhase('idle');
     }
   };
 
@@ -136,6 +140,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       return;
     }
     setBusy(true);
+    setBusyPhase('downloading');
     setError('');
     try {
       await downloadWithRaw(rawOnce);
@@ -144,6 +149,7 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
       setError(e?.message || 'Download failed');
     } finally {
       setBusy(false);
+      setBusyPhase('idle');
     }
   };
 
@@ -245,9 +251,18 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
           disabled={busy}
           onClick={createKeyAndDownload}
           className="tt-btn tt-btn-primary"
+          aria-busy={busy}
         >
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Key className="h-4 w-4" />}
-          Create key and download
+          {busy ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <Key className="h-4 w-4" aria-hidden />
+          )}
+          {busy
+            ? busyPhase === 'downloading'
+              ? 'Downloading starter…'
+              : 'Creating key…'
+            : 'Create key and download'}
         </button>
 
         {(tokenPrefix || rawOnce) && (
@@ -271,7 +286,12 @@ const HelperSetup: React.FC<{ darkMode: boolean }> = () => {
                 onClick={retryDownload}
                 className="tt-btn tt-btn-ghost text-sm"
               >
-                <Download className="h-3.5 w-3.5" /> Retry download
+                {busy && busyPhase === 'downloading' ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                ) : (
+                  <Download className="h-3.5 w-3.5" aria-hidden />
+                )}
+                {busy && busyPhase === 'downloading' ? 'Downloading…' : 'Retry download'}
               </button>
               {rawOnce && !showFullKey && (
                 <button
