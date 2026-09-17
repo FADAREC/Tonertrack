@@ -18,20 +18,15 @@ const TopNav: React.FC<{
       >
         <Menu className="h-5 w-5" />
       </button>
+      {/* Logo only on small screens - sidebar already brands desktop */}
       <Link
         to="/"
-        className="flex items-center gap-2 min-w-0 hover:opacity-90"
-        aria-label="TonerTrack home - fleet board"
+        className="flex items-center gap-2 min-w-0 hover:opacity-90 md:hidden"
+        aria-label="TonerTrack home"
       >
         <BrandMark size={28} wordmarkClassName="tt-display text-base tracking-wide" />
       </Link>
       <div className="flex-1" />
-      <Link
-        to="/"
-        className="text-[11px] font-medium uppercase tracking-wider text-[#9aa0a8] hover:text-[#e8eaed] hidden sm:inline"
-      >
-        Fleet board
-      </Link>
     </header>
   );
 };

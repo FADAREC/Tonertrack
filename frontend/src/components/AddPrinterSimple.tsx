@@ -74,9 +74,10 @@ const AddPrinterSimple: React.FC<{ darkMode: boolean }> = ({ darkMode }) => {
 
   const tabBase =
     'flex-1 py-2.5 px-3 rounded-lg text-sm font-medium transition-colors border text-center';
-  const tabOn = 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300';
+  const tabOn =
+    'bg-[#39ff88] text-[#0b132b] border-[#39ff88] shadow-[0_0_0_1px_rgba(57,255,136,0.35)]';
   const tabOff = darkMode
-    ? 'bg-transparent border-zinc-700 text-zinc-400 hover:text-zinc-200'
+    ? 'bg-white/[0.03] border-white/10 text-[#8b9bb8] hover:text-[#e8eaed] hover:border-white/20'
     : 'bg-transparent border-zinc-300 text-zinc-600 hover:text-zinc-900';
 
   return (
