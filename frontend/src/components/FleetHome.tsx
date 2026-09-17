@@ -116,6 +116,7 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [tonerDraft, setTonerDraft] = useState('');
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null);
   const [pollSeconds, setPollSeconds] = useState<number | null>(null);
   const [pollLabel, setPollLabel] = useState('');
   const [allowedIntervals, setAllowedIntervals] = useState<number[]>([]);
@@ -195,11 +196,11 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
   };
 
   const remove = async (id: number, name: string) => {
-    if (!window.confirm(`Remove “${name}” from the fleet?`)) return;
     setBusyId(id);
     try {
       await printersAPI.delete(id);
-      toast.success('Printer removed');
+      setConfirmDeleteId(null);
+      toast.success(`Removed ${name}`);
       await load();
     } catch (e: any) {
       setError(e?.response?.data?.detail || 'Delete failed');
@@ -480,18 +481,51 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
                     )}
                   </div>
 
-                  <button
-                    type="button"
-                    disabled={busyId === p.id}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      remove(p.id, p.name);
-                    }}
-                    className="p-2 rounded-lg text-[#8b9bb8] hover:text-red-400 hover:bg-red-500/10"
-                    title="Remove"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {confirmDeleteId === p.id ? (
+                    <div
+                      className="flex items-center gap-1.5"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <span className="text-[11px] text-[#8b9bb8] hidden sm:inline">Remove?</span>
+                      <button
+                        type="button"
+                        disabled={busyId === p.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          remove(p.id, p.name);
+                        }}
+                        className="px-2 py-1 rounded-lg text-xs font-medium bg-red-500/15 text-red-300 border border-red-500/30 hover:bg-red-500/25 disabled:opacity-50"
+                      >
+                        {busyId === p.id ? '…' : 'Yes'}
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busyId === p.id}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteId(null);
+                        }}
+                        className="px-2 py-1 rounded-lg text-xs text-[#8b9bb8] border border-white/10 hover:bg-white/5"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled={busyId === p.id}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteId(p.id);
+                      }}
+                      className="p-2 rounded-lg text-[#8b9bb8] hover:text-red-400 hover:bg-red-500/10"
+                      title="Remove"
+                      aria-label={`Remove ${p.name}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
 
