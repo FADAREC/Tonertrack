@@ -246,23 +246,31 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
         </div>
       </header>
 
-      {/* Goal 1 path: get printers listed and checks running */}
-      {!loading && (
+      {/* Full onboarding only before step 1 (no printers). After that, collapse so cards stay high. */}
+      {!loading && printers.length === 0 && (
         <div className="tt-card px-4 py-3 space-y-2">
           <p className="text-sm font-medium text-[#f2f5ff]">Get the board useful for support</p>
           <ul className="text-xs text-[#8b9bb8] space-y-1">
-            <li>{printers.length > 0 ? 'Done' : 'Next'}: Add the printers on this floor (network IP or USB / Windows name).</li>
-            <li>{freshCount > 0 ? 'Done' : 'Next'}: Run the office checker so status stays current.</li>
+            <li>Next: Add the printers on this floor (network IP or USB / Windows name).</li>
+            <li>Next: Run the office checker so status stays current.</li>
             <li>Support opens this board first when a printer problem is reported.</li>
           </ul>
           <div className="flex flex-wrap gap-2 pt-1">
-            {printers.length === 0 && (
-              <Link to="/add-printer" className="tt-btn tt-btn-primary text-xs">Add printers</Link>
-            )}
-            {printers.length > 0 && freshCount === 0 && (
-              <Link to="/helper" className="tt-btn tt-btn-primary text-xs">Set up office checker</Link>
-            )}
+            <Link to="/add-printer" className="tt-btn tt-btn-primary text-xs">Add printers</Link>
           </div>
+        </div>
+      )}
+
+      {/* Compact next-step only: step 1 done, checker not yet reporting */}
+      {!loading && printers.length > 0 && freshCount === 0 && (
+        <div className="tt-card px-3 py-2.5 flex flex-wrap items-center gap-2 sm:gap-3">
+          <p className="text-xs text-[#8b9bb8] min-w-0 flex-1">
+            <span className="text-[#f2f5ff] font-medium">Next · </span>
+            Run the office checker so status stays current.
+          </p>
+          <Link to="/helper" className="tt-btn tt-btn-primary text-xs shrink-0">
+            Set up office checker
+          </Link>
         </div>
       )}
 
@@ -322,32 +330,6 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
         <p className="text-xs text-[#8b9bb8]">
           Goal 1 target: at least 90% checked on time during work hours. Now {freshnessPct}%.
         </p>
-      )}
-
-      {allowedIntervals.length > 0 && (
-        <div className="tt-card p-4">
-          <p className="text-sm font-medium text-[#f2f5ff]">How often to check printers</p>
-          <p className="text-xs text-[#8b9bb8] mt-0.5 mb-3">
-            How often the office computer should check the printers you added.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            {allowedIntervals.map((s) => (
-              <button
-                key={s}
-                type="button"
-                disabled={pollSaving}
-                onClick={() => savePollInterval(s)}
-                className={`px-3 py-2 rounded-lg text-xs border min-h-[40px] transition ${
-                  pollSeconds === s
-                    ? 'bg-[#39ff88] text-[#0b132b] border-[#39ff88]'
-                    : 'border-white/10 text-[#f2f5ff] hover:bg-white/5'
-                }`}
-              >
-                {s < 3600 ? `${s / 60} min` : s < 86400 ? `${s / 3600} h` : `${s / 86400} d`}
-              </button>
-            ))}
-          </div>
-        </div>
       )}
 
       {error && (
@@ -613,6 +595,32 @@ const FleetHome: React.FC<{ darkMode: boolean }> = () => {
 
       {printers.length > 0 && printers.length < 5 && (
         <p className="text-xs text-[#5c6b86] text-center">Listed · {printers.length} printers</p>
+      )}
+
+      {allowedIntervals.length > 0 && printers.length > 0 && (
+        <div className="tt-card p-4">
+          <p className="text-sm font-medium text-[#f2f5ff]">How often to check printers</p>
+          <p className="text-xs text-[#8b9bb8] mt-0.5 mb-3">
+            How often the office computer should check the printers you added.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {allowedIntervals.map((s) => (
+              <button
+                key={s}
+                type="button"
+                disabled={pollSaving}
+                onClick={() => savePollInterval(s)}
+                className={`px-3 py-2 rounded-lg text-xs border min-h-[40px] transition ${
+                  pollSeconds === s
+                    ? 'bg-[#39ff88] text-[#0b132b] border-[#39ff88]'
+                    : 'border-white/10 text-[#f2f5ff] hover:bg-white/5'
+                }`}
+              >
+                {s < 3600 ? `${s / 60} min` : s < 86400 ? `${s / 3600} h` : `${s / 86400} d`}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
 
       <div className="tt-thumb-bar md:hidden">
